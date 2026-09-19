@@ -424,6 +424,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   const parseNum = s => { const v = parseFloat(String(s == null ? '' : s).trim().replace(',', '.')); return isFinite(v) ? v : NaN; };
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const nuevoId = () => uid() + Math.random().toString(36).slice(2, 12);
+  const telValido = t => { const n = String(t || '').replace(/\D/g, '').length; return n === 0 || n === 8 || n >= 10; };
   const $ = id => document.getElementById(id);
   const primerNombre = () => String(state.nombre).trim().split(/\s+/)[0];
   const medTxt = t => (t.med === 'otro' && t.medOtro ? t.medOtro : MEDS[t.med].nombre);
@@ -446,6 +447,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     d.habitos = d.habitos && typeof d.habitos === 'object' ? d.habitos : {};
     d.sintomas = d.sintomas && typeof d.sintomas === 'object' ? d.sintomas : {};
     d.tratamiento = d.tratamiento && MEDS[d.tratamiento.med] ? d.tratamiento : null;
+    d.tel = typeof d.tel === 'string' ? d.tel : '';
     d.nube = d.nube && typeof d.nube === 'object' && typeof d.nube.acepta === 'boolean' ? { acepta: d.nube.acepta, id: d.nube.acepta ? (d.nube.id || nuevoId()) : null, fecha: d.nube.fecha || null } : null;
     const limite = addDays(iso(today()), -200);
     Object.keys(d.habitos).forEach(k => { if (k < limite) delete d.habitos[k]; });
@@ -474,17 +476,18 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     const pes = rs.filter(r => r.peso > 0);
     const ini = pes.length ? pes[0].peso : null, act = pes.length ? pes[pes.length - 1].peso : null;
     const vis = rs.filter(r => r.origen === 'farmacia');
-    const apl = vis.filter(r => r.dosis > 0);
+    const apl = rs.filter(r => r.dosis > 0);                       /* dosis aplicadas en la farmacia o en casa */
     const ultVis = vis.length ? vis[vis.length - 1] : null;
     const ultApl = apl.length ? apl[apl.length - 1] : null;
-    const prox = ultVis ? addDays(ultVis.fecha, 7) : null;
+    const base = [ultVis ? ultVis.fecha : '', ultApl ? ultApl.fecha : ''].sort().pop() || null;
+    const prox = base ? addDays(base, 7) : null;
     const dias = prox ? diffDays(prox, hoy) : null;
     let rest = null, porPluma = 4;
     apl.forEach(r => { if (r.plumaNueva || rest === null || rest <= 0) { porPluma = r.dosisPorPluma || 4; rest = porPluma; } rest -= 1; });
     const cambio = (ini != null && act != null) ? act - ini : 0;
     const pct = ini ? -cambio / ini * 100 : 0;
     const imc = (act && state.estatura) ? act / Math.pow(state.estatura / 100, 2) : null;
-    return { rs, pes, ini, act, vis, apl, ultVis, ultApl, prox, dias, restantes: rest, porPluma, cambio, pct, imc, sellos: vis.length, selladoHoy: !!(ultVis && ultVis.fecha === hoy) };
+    return { rs, pes, ini, act, vis, apl, ultVis, ultApl, prox, dias, restantes: rest, porPluma, cambio, pct, imc, sellos: vis.length, selladoHoy: !!(ultVis && ultVis.fecha === hoy), dosisHoy: !!(ultApl && ultApl.fecha === hoy) };
   }
   function bloqueSellos(c) { const enBloque = c.sellos === 0 ? 0 : ((c.sellos - 1) % 4) + 1; return { enBloque, inicio: c.sellos - enBloque }; }
 
@@ -521,7 +524,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     nube.t = setTimeout(async () => {
       if (!state || !state.nube || state.nube.acepta !== true) return;
       try {
-        const datos = JSON.parse(JSON.stringify({ v: 1, uid: nube.uid, farmacia: state.farmacia, nombre: state.nombre, estatura: state.estatura || null, creado: state.creado,
+        const datos = JSON.parse(JSON.stringify({ v: 1, uid: nube.uid, farmacia: state.farmacia, nombre: state.nombre, tel: state.tel || '', estatura: state.estatura || null, creado: state.creado,
           tratamiento: state.tratamiento || null, registros: state.registros, habitos: state.habitos, sintomas: state.sintomas, aceptoCopia: state.nube.fecha || null, modificado: Date.now() }));
         datos.actualizado = fb.ahora();
         await fb.db.collection('clientes').doc(state.nube.id).set(datos);
@@ -537,7 +540,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   function pintarNube() { const el = $('nube-estado'); if (el) el.textContent = textoNube(); }
   function elegirCopia(acepta) {
     const pend = ui.sheet && ui.sheet.pendiente;
-    if (pend) state = normalizar({ v: 1, farmacia: pend.farmacia, nombre: pend.nombre, estatura: null, creado: iso(today()), tratamiento: null, registros: [], habitos: {}, sintomas: {}, nube: { acepta, id: acepta ? nuevoId() : null, fecha: new Date().toISOString() } });
+    if (pend) state = normalizar({ v: 1, farmacia: pend.farmacia, nombre: pend.nombre, tel: pend.tel || '', estatura: null, creado: iso(today()), tratamiento: null, registros: [], habitos: {}, sintomas: {}, nube: { acepta, id: acepta ? nuevoId() : null, fecha: new Date().toISOString() } });
     else state.nube = { acepta, id: acepta ? ((state.nube && state.nube.id) || nuevoId()) : null, fecha: new Date().toISOString() };
     if (acepta && nube.estado === 'sin-permiso') nube.estado = 'pendiente';
     cerrarSheet(); save(); ui.tab = pend ? 'inicio' : ui.tab; render(); if (pend) window.scrollTo(0, 0);
@@ -578,7 +581,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
               const snap = await fb.db.collection('clientes').doc(id).get();
               if (!snap.exists) throw new Error('sin datos');
               const d = snap.data();
-              const nuevo = normalizar({ v: 1, farmacia: d.farmacia, nombre: d.nombre, estatura: d.estatura || null, creado: d.creado || iso(today()), tratamiento: d.tratamiento || null,
+              const nuevo = normalizar({ v: 1, farmacia: d.farmacia, nombre: d.nombre, tel: d.tel || '', estatura: d.estatura || null, creado: d.creado || iso(today()), tratamiento: d.tratamiento || null,
                 registros: d.registros || [], habitos: d.habitos || {}, sintomas: d.sintomas || {}, nube: { acepta: true, id, fecha: d.aceptoCopia || null } });
               if (!valido(nuevo)) throw new Error('datos inválidos');
               state = nuevo;
@@ -600,6 +603,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       '<div class="campo"><span>¿Cuál es su farmacia?</span><div class="opciones">' +
       Object.keys(BRANDS).map(k => '<button class="opcion" data-act="onb-marca" data-marca="' + k + '" aria-pressed="' + (ui.onb === k) + '"><small>Farmacia</small>' + BRANDS[k] + '</button>').join('') + '</div></div>' +
       '<label class="campo"><span>¿Cómo se llama?</span><input class="inp" id="o-nombre" autocomplete="given-name" placeholder="Su nombre"></label>' +
+      '<label class="campo"><span>Su WhatsApp</span><input class="inp" id="o-tel" inputmode="tel" autocomplete="tel" placeholder="8888-8888"><small>Para que la farmacia le recuerde su cita. Es opcional.</small></label>' +
       '<div id="f-error" class="error" hidden></div>' +
       '<div class="acciones"><button class="btn btn-p btn-g" data-act="onb-empezar">Empezar</button></div>' +
       '<p class="muted" style="margin-top:1rem">' + (nubeConfigurada ? 'Sus datos se guardan en este teléfono. Usted decide si la farmacia guarda una copia.' : 'Sus datos quedan guardados solo en este teléfono.') + '</p>' +
@@ -622,10 +626,11 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     let tit, baj;
     if (c.dias === null) { tit = 'Empecemos su control de peso'; baj = ''; }
     else if (c.selladoHoy) { tit = 'Control de hoy listo'; baj = 'El próximo es el ' + fechaLarga(c.prox) + '.'; }
-    else if (c.dias > 1) { tit = 'Faltan ' + c.dias + ' días para su control'; baj = 'Le esperamos el ' + fechaLarga(c.prox) + ' en ' + f + '.'; }
-    else if (c.dias === 1) { tit = 'Mañana le toca su control'; baj = 'Le esperamos en ' + f + '.'; }
-    else if (c.dias === 0) { tit = 'Hoy le toca su control'; baj = 'Le esperamos en ' + f + ' para su peso y su dosis de la semana.'; }
-    else { tit = 'Su control era el ' + fechaLarga(c.prox); baj = 'Pase por la farmacia y vemos con usted cómo retomar.'; }
+    else if (c.dosisHoy) { tit = 'Dosis de hoy anotada'; baj = 'La próxima es el ' + fechaLarga(c.prox) + '. Cuando pase por ' + f + ', pésese y selle su carné.'; }
+    else if (c.dias > 1) { tit = 'Faltan ' + c.dias + ' días para su dosis'; baj = 'Le toca el ' + fechaLarga(c.prox) + '. En ' + f + ' se la aplicamos, le pesamos y sella su carné.'; }
+    else if (c.dias === 1) { tit = 'Mañana le toca su dosis'; baj = 'En ' + f + ' se la aplicamos, le pesamos y sella su carné.'; }
+    else if (c.dias === 0) { tit = 'Hoy le toca su dosis'; baj = 'Le esperamos en ' + f + ' para pesarse, aplicársela y sellar su carné.'; }
+    else { tit = 'Su dosis era el ' + fechaLarga(c.prox); baj = 'Pase por la farmacia y vemos con usted cómo retomar.'; }
 
     let html = '<section class="view"><p class="fecha cap">' + fechaLarga(hoy) + '</p>' +
       '<h1 class="titular">Hola, ' + esc(primerNombre()) + '. ' + tit + '</h1>' + (baj ? '<p class="bajada">' + baj + '</p>' : '');
@@ -640,7 +645,10 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     for (let k = 0; k < 4; k++) cs += k < b.enBloque ? '<i class="s">' + SELLO + '</i>' : '<i>' + (k + 1) + '</i>';
     html += '<button class="franja" data-act="tab" data-tab="carne"><span class="franja-t"><b>Mi carné</b><em>' + (c.sellos ? b.enBloque + ' de 4 sellos este mes' : 'Todavía sin sellos') + ' ›</em></span>' +
       '<span class="franja-s" aria-hidden="true">' + cs + '</span></button>';
-    if (!c.selladoHoy && (c.sellos === 0 || c.dias <= 0)) html += '<div class="acciones" style="margin-top:.6rem"><button class="btn btn-p btn-g" data-act="control-abrir">Estoy en la farmacia: sellar mi carné</button></div>';
+    if (!c.selladoHoy && (c.sellos === 0 || c.dias === null || c.dias <= 0)) html += '<div class="acciones" style="margin-top:.6rem"><button class="btn btn-p btn-g" data-act="control-abrir">Estoy en la farmacia: sellar mi carné</button></div>';
+    if (!c.dosisHoy && !c.selladoHoy && (c.dias === null || c.dias <= 1)) html += '<button class="enlace" data-act="casa-abrir">Me apliqué la dosis en casa</button>';
+    if (!state.tel && (!nubeConfigurada || (state.nube && state.nube.acepta))) html += '<div class="pasos"><h2>¿Le recordamos su cita por WhatsApp?</h2><p class="muted" style="margin-top:.3rem">Anote su número y la farmacia le avisa cuando le toca el control.</p>' +
+      '<div class="acciones"><button class="btn btn-s" data-act="perfil">Anotar mi WhatsApp</button></div></div>';
     if (c.sellos === 0) {
       html += '<div class="pasos"><h2>Así funciona</h2><ol>' +
         '<li><i>1</i><span>Cada día marque aquí lo que hizo: agua, comida, caminata y ejercicio.</span></li>' +
@@ -746,8 +754,8 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       (cam || eje ? 'Caminó ' + cam + (cam === 1 ? ' día' : ' días') + ' e hizo ejercicio ' + eje + (eje === 1 ? ' vez' : ' veces') + '.' : 'Cada hábito que marque en Inicio rellena el día.') + '</p></div>';
 
     if (c.rs.length) {
-      h += '<div class="bloque"><h2>Mis pesadas</h2><div class="lista">' + c.rs.slice().reverse().map(r =>
-        '<div class="reg"><div class="reg-f"><b>' + fechaCorta(r.fecha) + '</b><span>' + (r.origen === 'farmacia' ? 'En la farmacia' : 'En casa') + '</span></div><span class="reg-p">' + (r.peso ? num(r.peso) + ' kg' : '') + '</span>' +
+      h += '<div class="bloque"><h2>Mi historial</h2><div class="lista">' + c.rs.slice().reverse().map(r =>
+        '<div class="reg"><div class="reg-f"><b>' + fechaCorta(r.fecha) + '</b><span>' + (r.origen === 'farmacia' ? 'Control en la farmacia' + (r.dosis ? ', ' + dosisTxt(r.dosis) + ' mg' : '') : r.dosis ? 'Dosis en casa, ' + dosisTxt(r.dosis) + ' mg' : 'Pesada en casa') + '</span></div><span class="reg-p">' + (r.peso ? num(r.peso) + ' kg' : '') + '</span>' +
         '<button class="reg-del" data-act="borrar-reg" data-id="' + r.id + '">Quitar</button></div>').join('') + '</div></div>';
     }
     return h + '</section>';
@@ -801,7 +809,8 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       '<div class="sellos">' + sellos + '</div></div>';
 
     h += '<div class="acciones"><button class="btn btn-p btn-g" data-act="control-abrir"' + (c.selladoHoy ? ' disabled style="opacity:.5"' : '') + '>' + (c.selladoHoy ? 'Carné sellado hoy' : 'Estoy en la farmacia: sellar mi carné') + '</button></div>' +
-      '<p class="muted" style="margin-top:.5rem">' + (c.selladoHoy ? 'Su próximo control es el ' + fechaLarga(c.prox) + '.' : 'Un sello por cada control semanal. Con cuatro completa el mes.') + '</p>';
+      '<p class="muted" style="margin-top:.5rem">' + (c.selladoHoy ? 'Su próxima dosis es el ' + fechaLarga(c.prox) + '.' : 'Un sello por cada control en la farmacia. Con cuatro completa el mes.') + '</p>' +
+      (!c.dosisHoy && !c.selladoHoy ? '<button class="enlace" data-act="casa-abrir">Me apliqué la dosis en casa (sin sello)</button>' : '');
 
     h += '<div class="bloque"><h2>Mi tratamiento</h2><div class="receta">' +
       (t ? '<strong>' + esc(medTxt(t)) + ', ' + dosisTxt(t.dosis) + ' mg por semana</strong>' : '<strong>Se anota la primera vez que selle su carné</strong>') +
@@ -829,7 +838,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
         (nube.estado === 'sin-permiso' ? '<button class="btn btn-s" data-act="vinculo-abrir">Recuperar mi copia con ayuda de la farmacia</button>' : '<button class="btn btn-s" data-act="copia-quitar">Quitar mi copia de la farmacia</button>');
       else h += '<button class="btn btn-s" data-act="copia-abrir">Guardar una copia en la farmacia</button>';
     }
-    h += '<button class="btn btn-s" data-act="perfil">Cambiar mi nombre, estatura o farmacia</button>' +
+    h += '<button class="btn btn-s" data-act="perfil">Cambiar mi nombre, WhatsApp o farmacia</button>' +
       '<button class="btn btn-s" data-act="respaldo">Guardar una copia de mis datos</button>' +
       '<button class="btn btn-s" data-act="restaurar-abrir">Recuperar una copia</button>' +
       '<button class="btn btn-d" data-act="borrar-todo">Borrar todos mis datos</button></div></details>' +
@@ -868,26 +877,31 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 
   /* ---------- Sellar el carné: una pregunta por pantalla ---------- */
   function pasosControl(d) {
-    const p = ['peso', 'aplicada'];
+    const p = d.enCasa ? ['peso'] : ['peso', 'aplicada'];
     if (d.aplicada) {
       if (state.tratamiento) p.push('igual');
       if (!state.tratamiento || d.igual === false) p.push('med', 'dosis');
       p.push('sitio');
       if (d.med === 'mounjaro') p.push('pluma');
     }
-    p.push('codigo');
+    if (!d.enCasa) p.push('codigo');
     return p;
   }
-  function abrirControl() {
-    if (calc().selladoHoy) return toast('El control de hoy ya está sellado en su carné.');
+  function abrirControl(enCasa) {
+    const c0 = calc();
+    if (c0.selladoHoy) return toast('El control de hoy ya está sellado en su carné.');
+    if (enCasa && c0.dosisHoy) return toast('Ya anotó su dosis de hoy.');
     const t = state.tratamiento;
-    abrirSheet({ tipo: 'control', paso: 'peso', d: { peso: null, aplicada: null, igual: null, med: t ? t.med : null, medOtro: t ? t.medOtro || '' : '', dosis: t ? t.dosis : null, otra: false, sitio: null, pluma: null } });
+    abrirSheet({ tipo: 'control', paso: 'peso', d: { enCasa: !!enCasa, peso: null, aplicada: enCasa ? true : null, igual: null, med: t ? t.med : null, medOtro: t ? t.medOtro || '' : '', dosis: t ? t.dosis : null, otra: false, sitio: null, pluma: null } });
   }
   function cuerpoControl() {
     const s = ui.sheet, d = s.d, c = calc();
     if (s.paso === 'listo') {
+      if (d.enCasa) return '<div class="wz-listo"><p class="wz-q" style="margin-top:0">Dosis anotada</p>' +
+        '<p class="wz-ayuda">Su próxima dosis es el ' + fechaLarga(addDays(iso(today()), 7)) + '. Cuando pase por la farmacia, pésese y selle su carné.</p></div>' +
+        '<div class="acciones"><button class="btn btn-p btn-g" data-act="cerrar">Listo</button></div>';
       return '<div class="wz-listo"><div class="sello-g">' + LOGO + '</div><p class="wz-q" style="margin-top:0">Carné sellado</p>' +
-        '<p class="wz-ayuda">Su próximo control es el ' + fechaLarga(addDays(iso(today()), 7)) + '.</p></div>' +
+        '<p class="wz-ayuda">Su próxima dosis es el ' + fechaLarga(addDays(iso(today()), 7)) + '.</p></div>' +
         '<div class="acciones"><button class="btn btn-p btn-g" data-act="control-fin">Ver mi carné</button></div>';
     }
     const ps = pasosControl(d), k = ps.indexOf(s.paso);
@@ -899,8 +913,9 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     const sig = txt => '<div id="f-error" class="error" hidden></div><div class="acciones"><button class="btn btn-p btn-g" data-act="control-ok">' + (txt || 'Siguiente') + '</button></div>';
 
     if (s.paso === 'peso') {
-      h += '<p class="wz-q">¿Cuánto pesó hoy?</p><p class="wz-ayuda">El peso de la romana de la farmacia.</p>' +
-        '<div class="wz-num"><input id="wz-in" inputmode="decimal" autocomplete="off" aria-label="Peso en kilos" value="' + (d.peso ? esc(num(d.peso)) : '') + '" placeholder="' + (c.act ? num(c.act) : '0,0') + '"><span>kg</span></div>' + sig();
+      h += '<p class="wz-q">¿Cuánto pesó hoy?</p><p class="wz-ayuda">' + (d.enCasa ? 'Si se pesó en su casa. Si no, puede seguir sin anotarlo.' : 'El peso de la romana de la farmacia.') + '</p>' +
+        '<div class="wz-num"><input id="wz-in" inputmode="decimal" autocomplete="off" aria-label="Peso en kilos" value="' + (d.peso ? esc(num(d.peso)) : '') + '" placeholder="' + (c.act ? num(c.act) : '0,0') + '"><span>kg</span></div>' + sig() +
+        (d.enCasa ? '<button class="enlace" data-act="control-sin-peso" style="margin-top:.4rem">Hoy no me pesé</button>' : '');
     } else if (s.paso === 'aplicada') {
       h += '<p class="wz-q">¿Le aplicaron hoy su dosis?</p><div class="wz-ops">' + op('aplicada', 'si', 'Sí', '', d.aplicada === true) + op('aplicada', 'no', 'No, solo me pesé', '', d.aplicada === false) + '</div>';
     } else if (s.paso === 'igual') {
@@ -913,14 +928,14 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       if (d.med === 'otro') h += '<label class="campo"><span>¿Cómo se llama?</span><input class="inp" id="wz-in" autocomplete="off" value="' + esc(d.medOtro) + '"></label>' + sig();
     } else if (s.paso === 'dosis') {
       const ds = MEDS[d.med].dosis;
-      h += '<p class="wz-q">¿Qué dosis le aplicaron?</p><p class="wz-ayuda">La que indica su receta, en miligramos.</p>';
+      h += '<p class="wz-q">' + (d.enCasa ? '¿Qué dosis se aplicó?' : '¿Qué dosis le aplicaron?') + '</p><p class="wz-ayuda">La que indica su receta, en miligramos.</p>';
       if (ds.length && !d.otra) h += '<div class="wz-ops tres">' + ds.map(x => op('dosis', x, dosisTxt(x) + ' mg', '', d.dosis === x)).join('') + '</div><button class="enlace" data-act="control-otra" style="margin-top:.6rem">Es otra dosis</button>';
       else h += '<div class="wz-num"><input id="wz-in" inputmode="decimal" autocomplete="off" aria-label="Dosis en miligramos"><span>mg</span></div>' + sig();
     } else if (s.paso === 'sitio') {
-      h += '<p class="wz-q">¿Dónde se la aplicaron?</p>' + (c.ultApl && c.ultApl.sitio ? '<p class="wz-ayuda">La vez pasada fue en ' + c.ultApl.sitio.toLowerCase() + '. Conviene ir rotando.</p>' : '') +
+      h += '<p class="wz-q">' + (d.enCasa ? '¿Dónde se la aplicó?' : '¿Dónde se la aplicaron?') + '</p>' + (c.ultApl && c.ultApl.sitio ? '<p class="wz-ayuda">La vez pasada fue en ' + c.ultApl.sitio.toLowerCase() + '. Conviene ir rotando.</p>' : '') +
         '<div class="wz-ops">' + SITIOS.map(x => op('sitio', x, x, '', d.sitio === x)).join('') + '</div>';
     } else if (s.paso === 'pluma') {
-      h += '<p class="wz-q">¿Hoy abrieron una pluma nueva?</p><p class="wz-ayuda">Cada pluma trae 4 dosis. Así la app le avisa cuando se esté terminando.</p><div class="wz-ops">' +
+      h += '<p class="wz-q">' + (d.enCasa ? '¿Hoy abrió una pluma nueva?' : '¿Hoy abrieron una pluma nueva?') + '</p><p class="wz-ayuda">Cada pluma trae 4 dosis. Así la app le avisa cuando se esté terminando.</p><div class="wz-ops">' +
         op('pluma', 'si', 'Sí, pluma nueva', '', d.pluma === true) + op('pluma', 'no', 'No, la misma', '', d.pluma === false) + '</div>';
     } else if (s.paso === 'codigo') {
       h += '<p class="wz-q">Código del día</p><p class="wz-ayuda">Pídaselo al personal de la farmacia. Son 4 números.</p>' +
@@ -928,9 +943,17 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     }
     return h;
   }
+  function controlGuardar() {
+    const s = ui.sheet, d = s.d;
+    state.registros.push({ id: uid(), fecha: iso(today()), peso: d.peso || null, origen: d.enCasa ? 'casa' : 'farmacia', dosis: d.aplicada ? d.dosis : null,
+      sitio: d.aplicada ? d.sitio : '', plumaNueva: !!(d.aplicada && d.pluma), dosisPorPluma: 4 });
+    if (d.aplicada) state.tratamiento = { med: d.med, medOtro: d.med === 'otro' ? d.medOtro : '', dosis: d.dosis };
+    save(); s.paso = 'listo'; render(); renderSheet();
+  }
   function controlIr(delta) {
     const s = ui.sheet, ps = pasosControl(s.d), k = ps.indexOf(s.paso);
     if (delta < 0 && k <= 0) return cerrarSheet();
+    if (delta > 0 && k === ps.length - 1) return controlGuardar();          /* en casa no hay código: el último paso guarda */
     s.paso = ps[Math.min(ps.length - 1, Math.max(0, k + delta))]; renderSheet();
   }
   function controlOpcion(campo, v) {
@@ -945,14 +968,15 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   }
   function controlOk() {
     const s = ui.sheet, d = s.d, inp = $('wz-in'), v = inp ? inp.value : '';
-    if (s.paso === 'peso') { const p = parseNum(v); if (!(p >= 25 && p <= 350)) return error('Anote su peso en kilos, por ejemplo 82,4.'); d.peso = Math.round(p * 10) / 10; return controlIr(1); }
+    if (s.paso === 'peso') {
+      if (d.enCasa && !String(v).trim()) { d.peso = null; return controlIr(1); }
+      const p = parseNum(v); if (!(p >= 25 && p <= 350)) return error('Anote su peso en kilos, por ejemplo 82,4.'); d.peso = Math.round(p * 10) / 10; return controlIr(1);
+    }
     if (s.paso === 'med') { if (!v.trim()) return error('Escriba el nombre del medicamento.'); d.medOtro = v.trim(); return controlIr(1); }
     if (s.paso === 'dosis') { const x = parseNum(v); if (!(x > 0 && x <= 100)) return error('Anote la dosis en miligramos, por ejemplo 2,5.'); d.dosis = x; return controlIr(1); }
     if (s.paso === 'codigo') {
       if (!codigoValido(v)) return;
-      state.registros.push({ id: uid(), fecha: iso(today()), peso: d.peso, origen: 'farmacia', dosis: d.aplicada ? d.dosis : null, sitio: d.aplicada ? d.sitio : '', plumaNueva: !!(d.aplicada && d.pluma), dosisPorPluma: 4 });
-      if (d.aplicada) state.tratamiento = { med: d.med, medOtro: d.med === 'otro' ? d.medOtro : '', dosis: d.dosis };
-      save(); s.paso = 'listo'; render(); renderSheet();
+      controlGuardar();
     }
   }
 
@@ -960,7 +984,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     const s = ui.sheet; if (!s) return;
     let h = '';
     if (s.tipo === 'control') {
-      h = marco('Sellar mi carné', cuerpoControl());
+      h = marco(s.d.enCasa ? 'Dosis en casa' : 'Sellar mi carné', cuerpoControl());
     } else if (s.tipo === 'peso') {
       h = marco('Anotar mi peso', '<p class="wz-q">¿Cuánto pesó?</p><p class="wz-ayuda">En ayunas y siempre en la misma romana.</p>' +
         '<div class="wz-num"><input id="wz-in" inputmode="decimal" autocomplete="off" aria-label="Peso en kilos" placeholder="0,0"><span>kg</span></div>' +
@@ -970,7 +994,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     } else if (s.tipo === 'consentir') {
       const f = 'Farmacia ' + BRANDS[s.pendiente ? s.pendiente.farmacia : state.farmacia];
       h = marco('Una copia en la farmacia', '<p class="wz-q">¿Quiere que ' + f + ' guarde una copia de sus datos?</p>' +
-        '<p class="wz-ayuda">Son su nombre, su peso, su tratamiento y sus hábitos. El personal los ve para acompañar su avance y, si cambia de teléfono, ahí se los recuperan. Puede quitar la copia cuando quiera.</p>' +
+        '<p class="wz-ayuda">Son su nombre, su WhatsApp, su peso, su tratamiento y sus hábitos. El personal los ve para acompañar su avance y, si cambia de teléfono, ahí se los recuperan. Puede quitar la copia cuando quiera.</p>' +
         '<div class="wz-ops"><button class="op-g" data-act="copia-elegir" data-v="si">Sí, guardar una copia</button><button class="op-g" data-act="copia-elegir" data-v="no">No, solo en mi teléfono</button></div>');
     } else if (s.tipo === 'recuperar') {
       h = marco('Recuperar mis datos', '<p class="wz-q">¿Cómo quiere recuperarlos?</p><div class="wz-ops">' +
@@ -991,6 +1015,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
         '<div id="f-error" class="error" hidden></div><div class="acciones"><button class="btn btn-p btn-g" data-act="restaurar-ok">Recuperar</button></div>');
     } else if (s.tipo === 'perfil') {
       h = marco('Mis datos', '<label class="campo"><span>Nombre</span><input class="inp" id="e-nombre" value="' + esc(state.nombre) + '"></label>' +
+        '<label class="campo"><span>WhatsApp</span><input class="inp" id="e-tel" inputmode="tel" autocomplete="tel" placeholder="8888-8888" value="' + esc(state.tel || '') + '"><small>Para que la farmacia le recuerde su cita.</small></label>' +
         '<label class="campo"><span>Estatura en centímetros</span><input class="inp" id="e-est" inputmode="numeric" placeholder="Opcional, por ejemplo 165" value="' + esc(state.estatura || '') + '"></label>' +
         '<div class="campo"><span>Farmacia</span><div class="opciones" id="e-marca">' + Object.keys(BRANDS).map(k =>
           '<button class="opcion" data-act="e-marca" data-marca="' + k + '" aria-pressed="' + (state.farmacia === k) + '"><small>Farmacia</small>' + BRANDS[k] + '</button>').join('') + '</div></div>' +
@@ -1054,11 +1079,12 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 
   /* ---------- Acciones ---------- */
   function empezar() {
-    const nombre = $('o-nombre').value.trim();
+    const nombre = $('o-nombre').value.trim(), tel = $('o-tel').value.trim();
     if (!ui.onb) return error('Toque el nombre de su farmacia.');
     if (!nombre) return error('Escriba su nombre.');
-    if (nubeConfigurada) return abrirSheet({ tipo: 'consentir', pendiente: { farmacia: ui.onb, nombre } });
-    state = normalizar({ v: 1, farmacia: ui.onb, nombre, estatura: null, creado: iso(today()), tratamiento: null, registros: [], habitos: {}, sintomas: {} });
+    if (!telValido(tel)) return error('Revise su WhatsApp: son 8 números.');
+    if (nubeConfigurada) return abrirSheet({ tipo: 'consentir', pendiente: { farmacia: ui.onb, nombre, tel } });
+    state = normalizar({ v: 1, farmacia: ui.onb, nombre, tel, estatura: null, creado: iso(today()), tratamiento: null, registros: [], habitos: {}, sintomas: {} });
     save(); ui.tab = 'inicio'; render(); window.scrollTo(0, 0);
   }
   function guardarPeso() {
@@ -1115,7 +1141,9 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
         confirmar({ titulo: 'Quitar esta pesada', texto: reg.origen === 'farmacia' ? 'Es un control sellado. Para quitarlo pida el código del día en la farmacia.' : 'Se borra esta pesada. No se puede deshacer.',
           boton: 'Quitar', pin: reg.origen === 'farmacia', ok: () => { state.registros = state.registros.filter(r => r.id !== id); save(); render(); toast('Pesada quitada'); } }); break;
       }
-      case 'control-abrir': abrirControl(); break;
+      case 'control-abrir': abrirControl(false); break;
+      case 'casa-abrir': abrirControl(true); break;
+      case 'control-sin-peso': ui.sheet.d.peso = null; controlIr(1); break;
       case 'control-atras': controlIr(-1); break;
       case 'control-op': controlOpcion(el.getAttribute('data-campo'), el.getAttribute('data-v')); break;
       case 'control-otra': ui.sheet.d.otra = true; ui.sheet.d.dosis = null; renderSheet(); break;
@@ -1135,15 +1163,16 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       case 'guardar-perfil': {
         const nombre = $('e-nombre').value.trim(), estTxt = $('e-est').value.trim(), est = estTxt ? parseNum(estTxt) : null;
         if (!nombre) { error('Escriba su nombre.'); break; }
+        if (!telValido($('e-tel').value)) { error('Revise su WhatsApp: son 8 números.'); break; }
         if (est !== null && !(est >= 100 && est <= 230)) { error('La estatura va en centímetros, por ejemplo 165.'); break; }
         const m = document.querySelector('#e-marca [aria-pressed="true"]');
-        state.nombre = nombre; state.estatura = est; if (m) state.farmacia = m.getAttribute('data-marca');
+        state.nombre = nombre; state.tel = $('e-tel').value.trim(); state.estatura = est; if (m) state.farmacia = m.getAttribute('data-marca');
         save(); cerrarSheet(); render(); toast('Datos guardados'); break;
       }
       case 'borrar-todo': confirmar({ titulo: 'Borrar todos mis datos', texto: 'Se borran su carné, sus pesadas y sus hábitos de este teléfono. No se puede deshacer.', boton: 'Borrar todo',
         ok: () => { try { localStorage.removeItem(KEY); } catch (e) { /* sin almacenamiento */ } state = null; ui.onb = null; ui.tab = 'inicio'; render(); window.scrollTo(0, 0); } }); break;
       case 'confirmar-ok': { const s = ui.sheet; if (!s) break; if (s.pin && !codigoValido($('c-pin').value)) break; cerrarSheet(); if (s.ok) s.ok(); break; }
-      case 'cerrar': { const eraListo = ui.sheet && ui.sheet.tipo === 'control' && ui.sheet.paso === 'listo'; cerrarSheet(); if (eraListo) { ui.tab = 'carne'; ui.selloNuevo = true; render(); window.scrollTo(0, 0); } break; }
+      case 'cerrar': { const eraListo = ui.sheet && ui.sheet.tipo === 'control' && ui.sheet.paso === 'listo' && !ui.sheet.d.enCasa; cerrarSheet(); if (eraListo) { ui.tab = 'carne'; ui.selloNuevo = true; render(); window.scrollTo(0, 0); } break; }
       case 'rutina-abrir': abrirSheet({ tipo: 'rutina', fase: 'elegir', vueltas: 2, v: 1, e: 0, seg: null }); break;
       case 'rutina-vueltas': ui.sheet.vueltas = parseInt(el.getAttribute('data-n'), 10); renderSheet(); break;
       case 'rutina-empezar': ui.sheet.fase = 'ejercicio'; renderSheet(); break;
@@ -1156,7 +1185,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   document.addEventListener('keydown', ev => {
     if (ev.key === 'Escape' && ui.sheet) return cerrarSheet();
     if (ev.key === 'Enter' && ev.target && ev.target.id === 'wz-in' && ui.sheet) { ev.preventDefault(); if (ui.sheet.tipo === 'control') controlOk(); else if (ui.sheet.tipo === 'peso') guardarPeso(); }
-    if (ev.key === 'Enter' && ev.target && ev.target.id === 'o-nombre') { ev.preventDefault(); empezar(); }
+    if (ev.key === 'Enter' && ev.target && (ev.target.id === 'o-nombre' || ev.target.id === 'o-tel')) { ev.preventDefault(); empezar(); }
   });
 
   render();

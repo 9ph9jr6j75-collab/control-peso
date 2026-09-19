@@ -484,7 +484,9 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     const rs = (Array.isArray(d.registros) ? d.registros : []).filter(r => r && r.fecha).slice().sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
     const pes = rs.filter(r => r.peso > 0), vis = rs.filter(r => r.origen === 'farmacia');
     const ini = pes.length ? pes[0].peso : null, act = pes.length ? pes[pes.length - 1].peso : null;
-    const ult = vis.length ? vis[vis.length - 1] : null, prox = ult ? addDays(ult.fecha, 7) : null, dias = prox ? diffDays(prox, hoy) : null;
+    const apl = rs.filter(r => r.dosis > 0), ult = vis.length ? vis[vis.length - 1] : null;
+    const base = [ult ? ult.fecha : '', apl.length ? apl[apl.length - 1].fecha : ''].sort().pop() || null;      /* última dosis o control, en farmacia o en casa */
+    const prox = base ? addDays(base, 7) : null, dias = prox ? diffDays(prox, hoy) : null;
     const r7 = { caminata: 0, ejercicio: 0, agua: 0, proteina: 0, tipos: [], sint: {} };
     for (let k = 0; k < 7; k++) {
       const f = addDays(hoy, -k), h = (d.habitos || {})[f] || {};
@@ -492,16 +494,31 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       if (h.fuerza) { r7.ejercicio++; const t = String(h.fuerzaTipo || '').toLowerCase(); if (t && r7.tipos.indexOf(t) < 0) r7.tipos.push(t); }
       ((d.sintomas || {})[f] || []).forEach(x => { if (x !== 'Me siento bien') r7.sint[x] = (r7.sint[x] || 0) + 1; });
     }
+    let restantes = null;
+    if (d.tratamiento && d.tratamiento.med === 'mounjaro') apl.forEach(r => { if (r.plumaNueva || restantes === null || restantes <= 0) restantes = r.dosisPorPluma || 4; restantes -= 1; });
     const estado = dias === null ? 'proximo' : dias < 0 ? 'atrasado' : dias === 0 ? 'hoy' : 'proximo';
     const cuando = dias === null ? 'todavía sin controles' : dias < 0 ? 'atrasada ' + (-dias) + (dias === -1 ? ' día' : ' días') : dias === 0 ? 'le toca hoy' : dias === 1 ? 'le toca mañana' : 'le toca en ' + dias + ' días';
-    return { rs, pes, vis, ini, act, ult, prox, dias, estado, cuando, r7, cambio: ini != null && act != null ? act - ini : 0, enMes: vis.length === 0 ? 0 : ((vis.length - 1) % 4) + 1 };
+    return { rs, pes, vis, ini, act, ult, prox, dias, estado, cuando, r7, restantes, cambio: ini != null && act != null ? act - ini : 0, enMes: vis.length === 0 ? 0 : ((vis.length - 1) % 4) + 1 };
   }
-  function filaNube(d, i) {
+  function filaNube(d, i, conBoton) {
     const t = d.tratamiento;
     return '<div class="fila" data-estado="' + i.estado + '"><button class="fila-main" data-act="ver-nube" data-id="' + esc(d.id) + '">' +
       '<span class="fila-nombre">' + esc(d.nombre || 'Sin nombre') + '<em class="tag">con la app</em></span>' +
       '<span class="fila-det">' + (i.act != null ? num(i.act) + ' kg' : 'Sin pesadas') + (t && MEDS[t.med] ? ', ' + esc(t.med === 'otro' && t.medOtro ? t.medOtro : MEDS[t.med].corto) + ' ' + dosisTxt(t.dosis) + ' mg' : '') + '</span>' +
-      '<span class="fila-cuando">' + i.cuando + '</span></button></div>';
+      '<span class="fila-cuando">' + i.cuando + (i.restantes !== null && i.restantes <= 1 ? (i.restantes <= 0 ? ', pluma terminada' : ', queda 1 dosis en la pluma') : '') + '</span></button>' +
+      (conBoton ? '<button class="btn btn-s btn-sm" data-act="recordar-nube" data-id="' + esc(d.id) + '">Recordar</button>' : '') + '</div>';
+  }
+  function mensajeNube(d, i) {
+    const nombre = String(d.nombre || '').trim().split(/\s+/)[0];
+    let t = 'Hola ' + nombre + ', le saludamos de Farmacia ' + BRANDS[d.farmacia] + '. ';
+    if (i.dias === null) t += 'Le esperamos para su primer control de peso y la aplicación de su tratamiento.';
+    else if (i.dias < 0) t += 'Su dosis semanal estaba para el ' + fechaLarga(i.prox) + '. Pase por la farmacia y revisamos con usted cómo retomar.';
+    else if (i.dias === 0) t += 'Hoy le toca su dosis semanal. Le esperamos para pesarse, aplicársela y sellar su carné.';
+    else t += 'Le recordamos que su dosis semanal es el ' + fechaLarga(i.prox) + '. En la farmacia se la aplicamos, le pesamos y sella su carné.';
+    if (i.restantes !== null && i.restantes <= 0) t += ' Ya le toca pluma nueva: se la tenemos lista. Si su receta venció, tráigala renovada.';
+    else if (i.restantes === 1) t += ' Le queda una dosis en la pluma: conviene ir previendo la siguiente.';
+    if (i.cambio < 0) t += ' Lleva ' + num(-i.cambio) + ' kg menos desde que empezó.';
+    return t + ' Recuerde que el tratamiento y la dosis son los que le indicó su médico.';
   }
   function bloqueNubeClientes() {
     if (!nubeConfigurada) return '';
@@ -516,7 +533,9 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     const i = infoNube(d), t = d.tratamiento, r7 = i.r7;
     let h = '<section class="view"><button class="volver" data-act="volver">‹ Clientes</button><h1 class="nombre">' + esc(d.nombre || 'Sin nombre') + '<em class="tag">con la app</em></h1>' +
       '<div class="receta"><strong>' + (t && MEDS[t.med] ? esc(t.med === 'otro' && t.medOtro ? t.medOtro : MEDS[t.med].nombre) + ', ' + dosisTxt(t.dosis) + ' mg por semana' : 'Tratamiento sin anotar todavía') + '</strong>' +
-      '<span>Datos que el cliente lleva en su teléfono. Aquí solo se consultan.</span></div><div class="peso">';
+      '<span>' + (d.tel ? 'WhatsApp ' + esc(d.tel) : 'Sin WhatsApp anotado en su app') + '</span>' +
+      '<em>Datos que el cliente lleva en su teléfono. Aquí solo se consultan.</em></div>' +
+      '<div class="acciones"><button class="btn btn-p" data-act="recordar-nube" data-id="' + esc(d.id) + '">Recordatorio por WhatsApp</button></div><div class="peso">';
     if (i.act != null) {
       h += '<div class="peso-act"><b>' + num(i.act) + '</b><span>kg</span></div>';
       if (i.pes.length > 1) h += '<p class="cambio">' + (i.cambio < 0 ? '<b>' + num(-i.cambio) + ' kg menos</b> desde el inicio' : i.cambio > 0 ? num(i.cambio) + ' kg más que al inicio' : 'Mismo peso que al inicio') + '</p>';
@@ -524,7 +543,8 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     } else h += '<p class="muted">Sin pesadas registradas.</p>';
     h += '</div>';
     let sf = ''; for (let k = 0; k < 4; k++) sf += k < i.enMes ? '<i class="s">' + LOGO + '</i>' : '<i>' + (k + 1) + '</i>';
-    h += '<div class="bloque"><h2>Sellos del mes</h2><div class="sellos-f" aria-hidden="true">' + sf + '</div><p class="cap" style="margin-top:.4rem">' + (i.prox ? fechaLarga(i.prox) + ', ' + i.cuando : 'Todavía sin controles sellados') + '</p></div>';
+    h += '<div class="bloque"><h2>Sellos del mes</h2><div class="sellos-f" aria-hidden="true">' + sf + '</div><p class="cap" style="margin-top:.4rem">' + (i.prox ? fechaLarga(i.prox) + ', ' + i.cuando : 'Todavía sin controles sellados') + '</p>' +
+      (i.restantes !== null ? '<p class="muted" style="margin-top:.2rem">' + (i.restantes <= 0 ? 'Pluma terminada: le toca comprar la siguiente.' : i.restantes === 1 ? 'Le queda 1 dosis en la pluma.' : 'Le quedan ' + i.restantes + ' dosis en la pluma.') + '</p>' : '') + '</div>';
     const sint = Object.keys(r7.sint).map(k => k.toLowerCase() + ' (' + r7.sint[k] + (r7.sint[k] === 1 ? ' día)' : ' días)')).join(', ');
     h += '<div class="bloque"><h2>Sus últimos 7 días</h2><div class="lista">' +
       '<div class="dato"><span>Caminata</span><span>' + r7.caminata + ' de 7 días</span></div>' +
@@ -534,7 +554,8 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       '<div class="dato"><span>Molestias</span><span>' + (sint ? esc(sint) : 'ninguna anotada') + '</span></div></div></div>';
     h += '<div class="bloque"><h2>Pesadas</h2>' + (i.rs.length ? '<div class="lista">' + i.rs.slice().reverse().map(r =>
       '<div class="visita"><span class="v-fecha">' + fechaCorta(r.fecha) + '</span><span class="v-peso">' + (r.peso ? num(r.peso) + ' kg' : '') + '</span><span class="v-det">' +
-      (r.origen === 'farmacia' ? 'Control en la farmacia' + (r.dosis ? ', ' + dosisTxt(r.dosis) + ' mg en ' + esc(String(r.sitio || '').toLowerCase()) : '') : 'Pesada en casa') + '</span><span></span></div>').join('') + '</div>' : '<p class="muted">Sin pesadas.</p>') + '</div>';
+      (r.origen === 'farmacia' ? 'Control en la farmacia' + (r.dosis ? ', ' + dosisTxt(r.dosis) + ' mg en ' + esc(String(r.sitio || '').toLowerCase()) : '')
+        : r.dosis ? 'Dosis en casa, ' + dosisTxt(r.dosis) + ' mg en ' + esc(String(r.sitio || '').toLowerCase()) : 'Pesada en casa') + '</span><span></span></div>').join('') + '</div>' : '<p class="muted">Sin pesadas.</p>') + '</div>';
     h += '<div class="bloque"><h2>Teléfono nuevo</h2><p class="muted" style="margin-bottom:.6rem">Si el cliente cambió de teléfono, en la app nueva toca "Ya usaba la app en otro teléfono" y le aparece un código de 6 números.</p>' +
       '<div class="pila"><button class="btn btn-s" data-act="nube-pasar" data-id="' + esc(d.id) + '">Pasar el carné a un teléfono nuevo</button>' +
       '<button class="btn btn-d" data-act="nube-borrar" data-id="' + esc(d.id) + '">Eliminar esta copia de la nube</button></div></div></section>';
@@ -604,7 +625,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     h += grupo('Atrasados', atras) + grupo('Hoy', deHoy) + grupo('Próximos 7 días', prox);
     if (nubeF.personal) {
       const app = nubeF.clientes.map(d => ({ d, i: infoNube(d) })).filter(x => x.i.dias !== null && x.i.dias <= 7).sort((a, b) => a.i.dias - b.i.dias);
-      if (app.length) h += '<div class="grupo"><h2>Con la app, esta semana</h2><div class="lista">' + app.map(x => filaNube(x.d, x.i)).join('') + '</div></div>';
+      if (app.length) h += '<div class="grupo"><h2>Con la app, esta semana</h2><div class="lista">' + app.map(x => filaNube(x.d, x.i, true)).join('') + '</div></div>';
     }
     const total = xs.reduce((s, x) => s + (x.i.cambio < 0 ? -x.i.cambio : 0), 0);
     h += '<p class="resumen">' + (xs.length === 1 ? '1 cliente en seguimiento.' : xs.length + ' clientes en seguimiento.') +
@@ -829,14 +850,15 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
         '<div id="f-error" class="error" hidden></div>' +
         '<div class="acciones"><button class="btn btn-p" data-act="guardar-visita" data-id="' + c.id + '">Guardar visita</button></div>');
     } else if (s.tipo === 'recordar') {
-      const c = buscarCliente(s.id), i = info(c);
+      const c = s.nube ? clienteNube(s.id) : buscarCliente(s.id);
+      const texto = s.nube ? mensajeNube(c, infoNube(c)) : mensaje(c, info(c));
       const tel = String(c.tel || '').replace(/\D/g, '');
       const wa = tel.length === 8 ? '506' + tel : tel.length >= 10 ? tel : '';
       h = marco('Recordatorio para ' + esc(c.nombre.split(' ')[0]),
-        '<label class="campo"><span>Mensaje</span><textarea class="inp" id="r-msg" rows="7">' + esc(mensaje(c, i)) + '</textarea></label>' +
+        '<label class="campo"><span>Mensaje</span><textarea class="inp" id="r-msg" rows="7">' + esc(texto) + '</textarea></label>' +
         '<div class="acciones"><button class="btn btn-p" data-act="copiar">Copiar mensaje</button>' +
         (wa ? '<a class="btn btn-s" id="r-wa" data-act="wa" data-tel="' + wa + '" href="https://wa.me/' + wa + '" target="_blank" rel="noopener">Abrir WhatsApp</a>' : '') + '</div>' +
-        (wa ? '' : '<p class="muted" style="margin-top:.6rem">Agregue el teléfono del cliente para abrir WhatsApp desde aquí.</p>'));
+        (wa ? '' : '<p class="muted" style="margin-top:.6rem">' + (s.nube ? 'El cliente no ha anotado su WhatsApp. Lo agrega en su app: Mi carné, Más opciones, Cambiar mi nombre, WhatsApp o farmacia.' : 'Agregue el teléfono del cliente para abrir WhatsApp desde aquí.') + '</p>'));
     } else if (s.tipo === 'pasar') {
       const d = clienteNube(s.id);
       h = marco('Pasar el carné de ' + esc(String(d ? d.nombre : '').split(' ')[0]), '<p style="margin-top:.5rem">Escriba el código de 6 números que muestra el teléfono nuevo del cliente.</p>' +
@@ -1131,6 +1153,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       case 'nube-revisar': if (fb && nubeF.usuario) fb.db.collection('personal').doc(nubeF.usuario.uid).get().then(d => { nubeF.personal = d.exists; return nubeF.personal ? cargarNube() : null; }).then(() => { render(); toast(nubeF.personal ? 'Cuenta autorizada' : 'Todavía no aparece el documento'); }).catch(() => toast('No se pudo revisar. Intente de nuevo.')); break;
       case 'nube-copiar-uid': { const t = nubeF.usuario ? nubeF.usuario.uid : ''; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast('ID copiado'), () => toast('Mantenga presionado el ID para copiarlo.')); else toast('Mantenga presionado el ID para copiarlo.'); break; }
       case 'nube-pasar': abrirSheet({ tipo: 'pasar', id }); break;
+      case 'recordar-nube': if (clienteNube(id)) abrirSheet({ tipo: 'recordar', id, nube: true }); break;
       case 'nube-pasar-ok': pasarCarne(id, $('n-codigo').value); break;
       case 'nube-borrar':
         confirmar('Eliminar esta copia de la nube', 'Se borra la copia que guarda la farmacia. Los datos siguen en el teléfono del cliente y, si su app sigue activa, la copia se vuelve a crear.', 'Eliminar', () => {
