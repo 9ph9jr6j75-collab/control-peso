@@ -1,0 +1,24 @@
+APPS DE CONTROL DE PESO, FARMACIA GIL SOLANO Y FARMACIA CARIBE
+
+Qué hay en esta carpeta
+  index.html       App del cliente (Mi control de peso). Es la que abre el QR.
+  mostrador.html   App de la farmacia. Muestra el código del día, la agenda, la guía en PDF y el QR.
+  Los demás archivos son los íconos y los datos para que el celular muestre el mortero al agregar la app a la pantalla de inicio.
+
+Cómo subirlas a GitHub
+  1. Entre a github.com con su cuenta. Arriba a la derecha toque "+" y luego "New repository".
+  2. Nombre: control-peso. Visibilidad: Public. Toque "Create repository".
+  3. En la página del repositorio toque "uploading an existing file" (o "Add file", "Upload files").
+  4. Seleccione TODOS los archivos de esta carpeta (no la carpeta, los archivos) y toque "Commit changes".
+  5. Vaya a "Settings", luego "Pages". En "Source" elija "Deploy from a branch". En "Branch" elija "main" y "/ (root)". Toque "Save".
+  6. Espere unos minutos. Las direcciones quedan así (cambie USUARIO por el de su cuenta):
+       Cliente:   https://USUARIO.github.io/control-peso/
+       Farmacia:  https://USUARIO.github.io/control-peso/mostrador.html
+  7. Abra la de la farmacia, entre a "Guía" y descargue el rótulo con el QR. El QR ya apunta solo a la dirección del cliente.
+
+Para actualizar una app más adelante
+  Entre al repositorio, toque "Add file", "Upload files" y suba el archivo nuevo con el mismo nombre. Reemplaza al anterior y la dirección no cambia.
+
+Importante
+  Los datos de cada cliente quedan guardados en su teléfono y atados a la dirección. No cambie el nombre del repositorio ni de la cuenta después de repartir el QR, porque los clientes empezarían de cero.
+  Si quiere que la página de la farmacia sea más difícil de encontrar, cámbiele el nombre a mostrador.html por otro que solo conozca el personal.

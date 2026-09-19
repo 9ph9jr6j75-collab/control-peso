@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="es" data-brand="gil">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi control de peso, Farmacia Gil Solano y Farmacia Caribe</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1B6B54">
+<meta name="apple-mobile-web-app-title" content="Mi control">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F3; --surface:#FFFFFF; --ink:#14261F; --ink-2:#4A5E56; --line:#D3DCD7;
+  --warn:#7A4F00; --warn-soft:#FBEFD0; --alert:#A3301E; --alert-soft:#FADED8;
+  --brand:#1B6B54; --brand-fg:#FFFFFF; --brand-soft:#DFF0E9; --brand-ink:#14503F;
+  --tile:#1B6B54; --tile-2:#145241; --tile-fg:#FFFFFF;
+  --veg:#2F855A; --prot:#B7602A; --har:#D9B23C;
+  --shadow:0 -12px 40px rgba(12,24,20,.28);
+  --f-display:"Bricolage Grotesque","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --f-text:"Atkinson Hyperlegible","Segoe UI",Roboto,system-ui,sans-serif;
+}
+:root[data-brand="caribe"]{ --brand:#0F6C8F; --brand-soft:#DDEEF6; --brand-ink:#0B516C; --tile:#0F6C8F; --tile-2:#0A526E; }
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1815; --surface:#16231F; --ink:#E7EFEB; --ink-2:#9EB1A9; --line:#2B3C36;
+    --warn:#F2C76E; --warn-soft:#3A2E12; --alert:#F3A091; --alert-soft:#40201A;
+    --brand:#62C9A9; --brand-fg:#0B1512; --brand-soft:#17342C; --brand-ink:#8ADCC2;
+    --shadow:0 -12px 40px rgba(0,0,0,.55);
+  }
+  :root:not([data-theme="light"])[data-brand="caribe"]{ --brand:#6CC3E6; --brand-soft:#14303D; --brand-ink:#97D6F0; }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1815; --surface:#16231F; --ink:#E7EFEB; --ink-2:#9EB1A9; --line:#2B3C36;
+  --warn:#F2C76E; --warn-soft:#3A2E12; --alert:#F3A091; --alert-soft:#40201A;
+  --brand:#62C9A9; --brand-fg:#0B1512; --brand-soft:#17342C; --brand-ink:#8ADCC2;
+  --shadow:0 -12px 40px rgba(0,0,0,.55);
+}
+:root[data-theme="dark"][data-brand="caribe"]{ --brand:#6CC3E6; --brand-soft:#14303D; --brand-ink:#97D6F0; }
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;font-size:106.25%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-text);font-size:1rem;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p,ul,ol{margin:0;padding:0}
+ul,ol{list-style:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none !important}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.cap::first-letter{text-transform:uppercase}
+
+.shell{max-width:30rem;margin:0 auto;min-height:100vh;min-height:100dvh;padding-bottom:calc(5.6rem + env(safe-area-inset-bottom))}
+
+/* Barra superior y pestañas */
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:.7rem;padding:.6rem 1rem;background:var(--bg);border-bottom:1px solid var(--line)}
+.tile{width:2.6rem;height:2.6rem;border-radius:.75rem;background:var(--tile);display:grid;place-items:center;flex:none}
+.tile svg{width:1.9rem;height:1.9rem;display:block}
+.wordmark{flex:1;min-width:0;line-height:1.1}
+.wordmark small{display:block;font-size:.8rem;color:var(--ink-2)}
+.wordmark strong{display:block;font-family:var(--f-display);font-size:1.35rem;font-weight:700;letter-spacing:-.015em}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabs-in{display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:30rem}
+.tab{position:relative;background:none;border:0;padding:.55rem .15rem .5rem;display:grid;justify-items:center;gap:.1rem;font-size:.8rem;color:var(--ink-2);min-height:3.7rem}
+.tab svg{width:1.6rem;height:1.6rem}
+.tab[aria-current="page"]{color:var(--brand-ink);font-weight:700}
+.tab[aria-current="page"]::before{content:"";position:absolute;top:-1px;left:26%;right:26%;height:3px;border-radius:0 0 3px 3px;background:var(--brand)}
+
+/* Contenido general */
+.view{padding:1.1rem 1rem 0}
+.fecha{color:var(--ink-2);font-size:.95rem}
+.titular{font-family:var(--f-display);font-weight:700;font-size:1.9rem;line-height:1.07;letter-spacing:-.025em;margin:.2rem 0 .45rem}
+.bajada{color:var(--ink-2)}
+.h-vista{font-family:var(--f-display);font-weight:700;font-size:1.6rem;letter-spacing:-.02em;line-height:1.1}
+.muted{color:var(--ink-2);font-size:.95rem}
+.bloque{margin-top:1.6rem}
+.bloque > h2{font-family:var(--f-display);font-size:1.15rem;font-weight:600;margin-bottom:.5rem}
+.lista{background:var(--surface);border:1px solid var(--line);border-radius:1rem;overflow:hidden}
+.nota{margin-top:.7rem;padding:.7rem .85rem;border-radius:.7rem;font-size:.95rem}
+.nota-warn{background:var(--warn-soft);color:var(--warn)}
+.nota-alert{background:var(--alert-soft);color:var(--alert)}
+.nota-info{background:var(--brand-soft);color:var(--brand-ink)}
+
+/* Botones y campos */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:3.2rem;padding:.6rem 1.1rem;border-radius:.85rem;border:1px solid transparent;font-weight:700;text-decoration:none;text-align:center}
+.btn-p{background:var(--brand);color:var(--brand-fg)}
+.btn-s{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.btn-d{background:none;color:var(--alert);padding-inline:.4rem}
+.btn-dd{background:var(--alert);color:#fff}
+.btn-g{min-height:3.7rem;font-size:1.1rem;width:100%}
+.acciones{display:flex;gap:.6rem;margin-top:1rem}
+.acciones .btn{flex:1}
+.pila{display:grid;gap:.55rem}
+.enlace{background:none;border:0;padding:.4rem 0;min-height:2.6rem;color:var(--brand-ink);font-weight:700;text-decoration:underline;text-align:left}
+.inp{width:100%;min-height:3.2rem;padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:.7rem;background:var(--bg);font-size:1.05rem}
+textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;word-break:break-all}
+.campo{display:block;margin-top:1.05rem}
+.campo > span{display:block;font-weight:700;margin-bottom:.35rem}
+.campo small{display:block;color:var(--ink-2);font-size:.9rem;margin-top:.3rem}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem}
+.chip{min-height:2.8rem;padding:.35rem .95rem;border-radius:999px;border:1.5px solid var(--line);background:var(--surface)}
+.chip[aria-pressed="true"]{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-ink);font-weight:700}
+.error{margin-top:.95rem;padding:.65rem .8rem;border-radius:.7rem;background:var(--alert-soft);color:var(--alert);font-weight:700}
+.opciones{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.opcion{min-height:4.2rem;border-radius:.9rem;border:1.5px solid var(--line);background:var(--surface);font-weight:700;font-size:1.1rem;line-height:1.15;padding:.4rem}
+.opcion small{display:block;font-weight:400;font-size:.8rem;color:var(--ink-2)}
+.opcion[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-ink)}
+
+/* Bienvenida */
+.onb{padding:2rem 1.25rem 2rem}
+.onb .tile{width:4.5rem;height:4.5rem;border-radius:1.3rem}
+.onb .tile svg{width:3.3rem;height:3.3rem}
+.onb h1{font-family:var(--f-display);font-size:2.3rem;font-weight:700;line-height:1.02;letter-spacing:-.03em;margin:1.1rem 0 .6rem}
+
+/* Inicio */
+.pasos{margin-top:1.1rem;padding:1rem;border-radius:1rem;background:var(--surface);border:1px solid var(--line)}
+.pasos h2{font-family:var(--f-display);font-size:1.15rem;font-weight:600;margin-bottom:.3rem}
+.pasos li{display:flex;gap:.75rem;align-items:flex-start;margin-top:.7rem}
+.pasos li i{flex:none;width:1.9rem;height:1.9rem;border-radius:50%;background:var(--brand);color:var(--brand-fg);display:grid;place-items:center;font-style:normal;font-weight:700;font-family:var(--f-display)}
+.franja{margin-top:1rem;display:block;width:100%;padding:.8rem .95rem .9rem;border:0;border-radius:1rem;background:linear-gradient(160deg,var(--tile),var(--tile-2));color:var(--tile-fg);text-align:left}
+.franja-t{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem}
+.franja-t b{font-family:var(--f-display);font-size:1.15rem}
+.franja-t em{font-style:normal;font-size:.92rem;opacity:.9}
+.franja-s{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-top:.7rem}
+.franja-s i{display:grid;place-items:center;width:100%;max-width:3.4rem;aspect-ratio:1;margin:0 auto;border-radius:50%;border:2px dashed rgba(255,255,255,.6);font-style:normal;font-family:var(--f-display);font-weight:600;color:rgba(255,255,255,.75)}
+.franja-s i.s{background:var(--tile-fg);border:0;transform:rotate(-8deg)}
+.franja-s i.s svg{width:68%;height:68%}
+
+.celda + .celda{border-top:1px solid var(--line)}
+.hab{display:flex;align-items:center;gap:.8rem;width:100%;min-height:4.3rem;padding:.75rem .9rem;background:none;border:0;text-align:left}
+.hab[aria-pressed="true"]{background:var(--brand-soft)}
+.hab-ico{flex:none;width:2.7rem;height:2.7rem;border-radius:.85rem;background:var(--brand-soft);color:var(--brand-ink);display:grid;place-items:center}
+.hab[aria-pressed="true"] .hab-ico{background:var(--surface)}
+.hab-ico svg{width:1.6rem;height:1.6rem}
+.hab-t{flex:1;min-width:0}
+.hab-t b{display:block;line-height:1.2}
+.hab-t small{display:block;color:var(--ink-2);font-size:.9rem;margin-top:.1rem}
+.marca{width:2.5rem;height:2.5rem;border-radius:50%;border:2px solid var(--line);background:var(--bg);display:grid;place-items:center;flex:none;color:var(--brand-fg)}
+.marca svg{width:1.3rem;height:1.3rem;opacity:0}
+.hab[aria-pressed="true"] .marca{background:var(--brand);border-color:var(--brand)}
+.hab[aria-pressed="true"] .marca svg{opacity:1}
+.hab-extra{padding:0 .9rem .85rem 4.4rem}
+.hab-extra p{font-size:.9rem;color:var(--ink-2);margin-bottom:.4rem}
+.vasos{display:flex;gap:.22rem;margin-top:.4rem}
+.vasos i{width:.95rem;height:1.25rem;border-radius:.15rem .15rem .35rem .35rem;border:1.5px solid var(--line);background:var(--bg)}
+.vasos i.lleno{background:var(--brand);border-color:var(--brand)}
+.redondo{flex:none;width:3.1rem;height:3.1rem;border-radius:50%;border:0;background:var(--brand);color:var(--brand-fg);display:grid;place-items:center}
+.redondo svg{width:1.5rem;height:1.5rem}
+.redondo-s{width:2.5rem;height:2.5rem;background:var(--bg);color:var(--ink);border:1.5px solid var(--line)}
+.redondo-s svg{width:1.1rem;height:1.1rem}
+.redondo:disabled{opacity:.35}
+.dos-btn{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.op-m{min-height:3.4rem;border-radius:.9rem;border:1.5px solid var(--line);background:var(--surface);font-weight:700;font-size:1.05rem}
+.op-m[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-ink)}
+.consejo{padding:.9rem 1rem;border-left:.3rem solid var(--brand);background:var(--surface);border-radius:0 .7rem .7rem 0}
+
+/* Mi avance */
+.peso-act{display:flex;align-items:baseline;gap:.4rem;font-family:var(--f-display)}
+.peso-act b{font-size:3.2rem;font-weight:700;letter-spacing:-.035em;line-height:1}
+.peso-act span{font-size:1.2rem;font-weight:600;color:var(--ink-2)}
+.cambio b{color:var(--brand-ink)}
+.chart{display:block;width:100%;height:auto;margin-top:.7rem}
+.chart .eje{stroke:var(--line);stroke-width:1}
+.chart .linea{fill:none;stroke:var(--brand);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .area{fill:var(--brand-soft)}
+.chart .pto{fill:var(--surface);stroke:var(--brand);stroke-width:2.5}
+.chart .pto-f{fill:var(--brand)}
+.chart text{fill:var(--ink-2);font-size:11px;font-family:var(--f-text)}
+.leyenda{display:flex;gap:1rem;font-size:.85rem;color:var(--ink-2);margin-top:.3rem}
+.leyenda i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;border:2px solid var(--brand);margin-right:.3rem;vertical-align:-.05rem}
+.leyenda i.f{background:var(--brand)}
+.hito-barra{height:.85rem;border-radius:999px;background:var(--line);overflow:hidden}
+.hito-barra i{display:block;height:100%;border-radius:999px;background:var(--brand)}
+.semana{display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem;text-align:center;font-size:.8rem;color:var(--ink-2)}
+.semana i{display:block;width:1.7rem;height:1.7rem;margin:0 auto .2rem;border-radius:50%;background:var(--line)}
+.semana i.n1{background:var(--brand);opacity:.35}
+.semana i.n2{background:var(--brand);opacity:.65}
+.semana i.n3{background:var(--brand)}
+.semana .hoy{color:var(--ink);font-weight:700}
+.semana .hoy i{outline:2px solid var(--ink);outline-offset:2px}
+.reg{display:flex;align-items:center;gap:.75rem;padding:.75rem .9rem}
+.reg + .reg{border-top:1px solid var(--line)}
+.reg-f{flex:1;min-width:0}
+.reg-f b{display:block}
+.reg-f span{display:block;color:var(--ink-2);font-size:.9rem}
+.reg-p{font-family:var(--f-display);font-weight:600;font-size:1.05rem;white-space:nowrap}
+.reg-del{background:none;border:0;padding:.35rem 0 .35rem .3rem;min-height:2.4rem;color:var(--ink-2);font-size:.85rem;text-decoration:underline}
+
+/* Guía */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;padding:.3rem;border-radius:.9rem;background:var(--surface);border:1px solid var(--line);margin-top:.9rem}
+.seg button{min-height:2.9rem;border:0;border-radius:.65rem;background:none;font-weight:700;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-fg)}
+.guia h2{font-family:var(--f-display);font-size:1.3rem;font-weight:700;letter-spacing:-.015em;margin:1.6rem 0 .55rem}
+.guia h3{font-size:1rem;font-weight:700;margin:1.1rem 0 .4rem}
+.puntos li{position:relative;padding-left:1.15rem;margin-top:.55rem}
+.puntos li::before{content:"";position:absolute;left:.1rem;top:.58em;width:.45rem;height:.45rem;border-radius:50%;background:var(--brand)}
+.puntos-alerta li::before{background:var(--alert)}
+.plato{display:grid;grid-template-columns:8.5rem 1fr;gap:.9rem;align-items:center;margin-top:.4rem}
+.plato svg{width:100%;height:auto;display:block}
+.plato li{display:flex;gap:.5rem;align-items:baseline;margin-top:.45rem;font-size:.92rem}
+.plato li i{width:.8rem;height:.8rem;border-radius:.2rem;flex:none;transform:translateY(.08rem)}
+.tabla{background:var(--surface);border:1px solid var(--line);border-radius:1rem;overflow:hidden}
+.tabla li{padding:.7rem .9rem}
+.tabla li + li{border-top:1px solid var(--line)}
+.tabla b{display:block}
+.tabla span{display:block;color:var(--ink-2);font-size:.92rem}
+.tabla .par{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
+.tabla .par span{white-space:nowrap}
+.hablada{margin-top:1.4rem;padding:.85rem 1rem;border:1.5px dashed var(--ink-2);border-radius:.5rem;background:var(--surface);font-size:.92rem}
+
+/* Carné */
+.carnet{position:relative;overflow:hidden;border-radius:1.1rem;padding:1.1rem 1.1rem 1.2rem;background:linear-gradient(160deg,var(--tile),var(--tile-2));color:var(--tile-fg)}
+.carnet-cab{display:flex;align-items:center;gap:.7rem}
+.carnet-cab svg{width:2.6rem;height:2.6rem;flex:none}
+.carnet-cab small{display:block;font-size:.8rem;opacity:.85}
+.carnet-cab strong{display:block;font-family:var(--f-display);font-size:1.2rem;line-height:1.1}
+.carnet-nombre{font-family:var(--f-display);font-size:1.7rem;font-weight:700;line-height:1.1;letter-spacing:-.02em;margin-top:1.1rem}
+.carnet-sub{font-size:.92rem;opacity:.9;margin-top:.15rem}
+.sellos{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-top:1.1rem}
+.sello{text-align:center;font-size:.8rem}
+.sello i{display:grid;place-items:center;width:100%;aspect-ratio:1;max-width:4.2rem;margin:0 auto .3rem;border-radius:50%;border:2px dashed rgba(255,255,255,.6);font-style:normal;font-family:var(--f-display);font-size:1.2rem;font-weight:600;color:rgba(255,255,255,.75)}
+.sello.ok i{background:var(--tile-fg);border:0;transform:rotate(-8deg)}
+.sello.ok i svg{width:68%;height:68%}
+.sello.nuevo i{animation:sellar .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes sellar{from{transform:scale(2.2) rotate(-25deg);opacity:0}to{transform:rotate(-8deg);opacity:1}}
+.receta{padding:.8rem .95rem;border:1.5px dashed var(--ink-2);border-radius:.5rem;background:var(--surface)}
+.receta strong{display:block}
+.receta em{display:block;margin-top:.45rem;padding-top:.45rem;border-top:1px solid var(--line);font-style:normal;font-size:.92rem}
+.pluma{display:flex;align-items:center;gap:.22rem;max-width:17rem;margin-top:.8rem}
+.pluma::before{content:"";width:1.7rem;height:1.15rem;border-radius:.6rem 0 0 .6rem;background:var(--ink-2);flex:none}
+.pluma::after{content:"";width:0;height:0;border-block:.34rem solid transparent;border-left:.95rem solid var(--ink-2);flex:none}
+.pluma i{display:block;height:1.15rem;flex:1;border-radius:.2rem;background:var(--line)}
+.pluma i.q{background:var(--brand)}
+.mas{margin-top:1.6rem;border:1px solid var(--line);border-radius:1rem;background:var(--surface);overflow:hidden}
+.mas summary{padding:.9rem 1rem;font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:3.4rem}
+.mas summary::-webkit-details-marker{display:none}
+.mas summary::after{content:"";width:.6rem;height:.6rem;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg);margin-right:.3rem}
+.mas[open] summary::after{transform:rotate(-135deg)}
+.mas .pila{padding:0 1rem 1rem}
+
+/* Hoja inferior */
+.backdrop{position:fixed;inset:0;z-index:20;background:rgba(8,16,13,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:30rem;max-height:94vh;max-height:94dvh;overflow:auto;background:var(--surface);border-radius:1.25rem 1.25rem 0 0;padding:1rem 1rem calc(1.25rem + env(safe-area-inset-bottom));box-shadow:var(--shadow);animation:sube .22s ease-out}
+.sheet-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
+.sheet-cab h2{font-family:var(--f-display);font-size:1.3rem;font-weight:700;letter-spacing:-.015em;line-height:1.15;padding-top:.35rem}
+.sheet-cab h2:focus{outline:none}
+.cerrar{background:none;border:0;width:2.9rem;height:2.9rem;border-radius:50%;display:grid;place-items:center;flex:none;margin:-.3rem -.4rem 0 0}
+.cerrar svg{width:1.5rem;height:1.5rem}
+@keyframes sube{from{transform:translateY(2rem);opacity:0}to{transform:none;opacity:1}}
+
+/* Pasos de una sola pregunta */
+.wz-nav{display:flex;align-items:center;gap:.8rem;margin-top:.2rem}
+.atras{background:none;border:0;color:var(--brand-ink);font-weight:700;padding:.4rem .2rem .4rem 0;min-height:2.75rem;flex:none}
+.wz-barra{display:flex;gap:.25rem;flex:1}
+.wz-barra i{flex:1;height:.4rem;border-radius:999px;background:var(--line)}
+.wz-barra i.h{background:var(--brand)}
+.wz-q{font-family:var(--f-display);font-size:1.8rem;font-weight:700;line-height:1.1;letter-spacing:-.02em;margin-top:.9rem}
+.wz-ayuda{color:var(--ink-2);margin-top:.45rem}
+.wz-ops{display:grid;gap:.65rem;margin-top:1.2rem}
+.wz-ops.tres{grid-template-columns:repeat(3,1fr)}
+.wz-ops.tres .op-g{font-size:1.05rem;padding-inline:.25rem;white-space:nowrap}
+.op-g{min-height:3.8rem;padding:.5rem .8rem;font-size:1.15rem;font-weight:700;border-radius:1rem;border:1.5px solid var(--line);background:var(--bg);width:100%;line-height:1.2}
+.op-g small{display:block;font-weight:400;font-size:.85rem;color:var(--ink-2)}
+.op-g[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-ink)}
+.wz-num{display:flex;align-items:baseline;justify-content:center;gap:.5rem;margin-top:1.4rem}
+.wz-num input{width:9.5rem;text-align:center;font-family:var(--f-display);font-size:2.8rem;font-weight:700;padding:.2rem;border:0;border-bottom:3px solid var(--brand);background:none;border-radius:0;font-variant-numeric:tabular-nums}
+.wz-num input:focus{outline:none;border-bottom-color:var(--ink)}
+.wz-num span{font-family:var(--f-display);font-size:1.3rem;color:var(--ink-2);font-weight:600}
+.wz-cod input{letter-spacing:.3em;width:12rem;padding-left:.3em}
+.wz-listo{text-align:center;padding:1rem 0 .4rem}
+.wz-listo .sello-g{width:6rem;height:6rem;margin:0 auto 1rem;border-radius:50%;background:var(--tile);display:grid;place-items:center;transform:rotate(-8deg);animation:sellar .5s cubic-bezier(.2,1.6,.4,1)}
+.wz-listo .sello-g svg{width:4rem;height:4rem}
+
+/* Rutina guiada */
+.rut-paso{color:var(--ink-2);margin-top:.6rem}
+.rut-nombre{font-family:var(--f-display);font-size:1.8rem;font-weight:700;line-height:1.08;letter-spacing:-.02em;margin-top:.2rem}
+.rut-rep{display:inline-block;margin-top:.6rem;padding:.25rem .8rem;border-radius:999px;background:var(--brand-soft);color:var(--brand-ink);font-weight:700}
+.rut-como{margin-top:.8rem}
+.rut-reloj{font-family:var(--f-display);font-size:4.5rem;font-weight:700;letter-spacing:-.04em;line-height:1;text-align:center;margin:1.2rem 0 .2rem;font-variant-numeric:tabular-nums}
+.rut-avance{display:flex;gap:.25rem;margin-top:1rem}
+.rut-avance i{flex:1;height:.35rem;border-radius:999px;background:var(--line)}
+.rut-avance i.h{background:var(--brand)}
+
+.toast{position:fixed;left:50%;top:calc(4.3rem + env(safe-area-inset-top));transform:translateX(-50%);z-index:30;max-width:calc(100% - 2rem);padding:.7rem 1.05rem;border-radius:.8rem;background:var(--ink);color:var(--bg);font-weight:700;font-size:.95rem;text-align:center}
+@media (prefers-reduced-motion:reduce){.sheet,.sello.nuevo i,.wz-listo .sello-g{animation:none}}
+</style>
+</head>
+<body>
+<div class="shell" id="app"></div>
+<div id="sheet-root"></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<noscript><p style="padding:1rem">Esta app necesita JavaScript activado.</p></noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Datos fijos de las farmacias (se cambian aquí) ---------- */
+  const BRANDS = { gil: 'Gil Solano', caribe: 'Caribe' };
+  const WHATSAPP = { gil: '', caribe: '' };            /* 8 dígitos, sin guiones. Vacío oculta el botón. */
+  const SEMILLA = 'mortero-gs-caribe';                /* debe ser igual en la app de la farmacia, que muestra el código del día */
+
+  const KEY = 'micontrol.paciente.v1';
+  const MEDS = {
+    mounjaro: { nombre: 'Mounjaro (tirzepatida)', corto: 'Mounjaro', dosis: [2.5, 5, 7.5, 10, 12.5, 15] },
+    ozempic: { nombre: 'Ozempic (semaglutida)', corto: 'Ozempic', dosis: [0.25, 0.5, 1, 2] },
+    otro: { nombre: 'Otro medicamento', corto: 'Otro', dosis: [] }
+  };
+  const SITIOS = ['Abdomen', 'Muslo', 'Brazo'];
+  const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
+  const MESES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
+  const VASOS = 8;
+  const TIPOS = ['Gimnasio', 'Pilates', 'Yoga', 'En casa', 'Otra'];
+
+  const mortero = (fg, bg) => '<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">' +
+    '<path d="M45 8 31 34" stroke="' + fg + '" stroke-width="6.5" stroke-linecap="round"/>' +
+    '<rect x="8" y="29" width="48" height="8" rx="4" fill="' + fg + '" stroke="' + bg + '" stroke-width="2.5"/>' +
+    '<path d="M13 37c0 11 6 18 14 18h10c8 0 14-7 14-18Z" fill="' + fg + '"/>' +
+    '<rect x="22" y="54" width="20" height="5" rx="2.5" fill="' + fg + '"/>' +
+    '<path d="M32 40.5v10M27 45.5h10" stroke="' + bg + '" stroke-width="3.2" stroke-linecap="round"/></svg>';
+  const LOGO = mortero('var(--tile-fg)', 'var(--tile)');
+  const SELLO = mortero('var(--tile)', 'var(--tile-fg)');
+  const trazo = (d, w) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (w || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  const CHECK = trazo('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 3);
+  const X_ICON = trazo('<path d="M6 6l12 12M18 6 6 18"/>', 2);
+  const MAS = trazo('<path d="M12 5v14M5 12h14"/>', 2.6);
+  const MENOS = trazo('<path d="M5 12h14"/>', 2.6);
+  const ICONOS = {
+    inicio: '<path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10v9.5h11V10"/><path d="M10 19.5v-5h4v5"/>',
+    avance: '<path d="M4 19.5h16"/><path d="M5 15l4.5-4.5 3.5 3L19 7"/><path d="M15 7h4v4"/>',
+    guia: '<path d="M6 3.5h8.5L19 8v12.5H6z"/><path d="M14 3.5V8h5M9 12.5h7M9 16h5"/>',
+    carne: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><circle cx="8.5" cy="11" r="2"/><path d="M5.8 15.8c.5-1.4 1.5-2 2.7-2s2.2.6 2.7 2M14 10h4.5M14 13.5h3"/>',
+    agua: '<path d="M7 4h10l-1.2 15a1.5 1.5 0 0 1-1.5 1.4H9.7A1.5 1.5 0 0 1 8.2 19z"/><path d="M7.6 10.5c1.5-1 3-1 4.4 0s2.9 1 4.4 0"/>',
+    proteina: '<path d="M12 3.5c3.2 0 6 5 6 9.2a6 6 0 0 1-12 0c0-4.2 2.8-9.2 6-9.2z"/><path d="M9.3 13.2a2.8 2.8 0 0 0 2.2 2.6"/>',
+    caminata: '<circle cx="13.5" cy="4.8" r="1.9"/><path d="M12.8 8.2 10.6 14l-2.4 5.8M10.6 14l3.6 2.2.9 4M12.8 8.2l3.2 2.3 2.4.4M12.2 9.6 9 11.2l-.8 2.6"/>',
+    ejercicio: '<path d="M3.5 9.5v5M6.5 7.5v9M17.5 7.5v9M20.5 9.5v5M6.5 12h11"/>'
+  };
+
+  /* ---------- Contenido de la guía ---------- */
+  const COMER = [
+    'Sirva porciones pequeñas y coma despacio. El medicamento hace que el estómago se vacíe más lento, y llenarse de más provoca náusea.',
+    'Incluya proteína en cada comida: huevo, pollo, pescado, frijoles, queso tierno o yogur natural. Ayuda a conservar el músculo mientras baja de peso.',
+    'Tome agua durante el día, de 6 a 8 vasos. Deje las gaseosas y los jugos azucarados. El licor también suma calorías y empeora la náusea.',
+    'Evite frituras y comidas muy grasosas o condimentadas, sobre todo los dos días después de la inyección.',
+    'No se salte comidas aunque tenga poco apetito.'
+  ];
+  const MENU = [
+    ['Desayuno', 'Huevo picado o en torta, media taza de gallo pinto y una fruta.'],
+    ['Almuerzo', 'Casado con pollo o pescado a la plancha, ensalada abundante, picadillo y poco arroz.'],
+    ['Merienda', 'Yogur natural, una fruta o un puño de maní sin sal.'],
+    ['Cena', 'Liviana y temprano: sopa de pollo con vegetales, o ensalada con atún o huevo duro.']
+  ];
+  const CAMINAR = [
+    ['Semanas 1 y 2', '10 a 15 minutos al día'],
+    ['Semanas 3 y 4', '20 minutos al día'],
+    ['De la semana 5 en adelante', '30 minutos, cinco días por semana']
+  ];
+  const RUTINA = [
+    { n: 'Sentadilla hasta tocar una silla', r: '12 repeticiones', c: 'Párese frente a una silla. Baje despacio hasta tocarla con los glúteos y suba. Espalda recta, rodillas en línea con los pies.' },
+    { n: 'Flexiones contra la pared', r: '10 repeticiones', c: 'Manos en la pared a la altura del pecho, cuerpo recto. Acerque el pecho doblando los codos y empuje para volver.' },
+    { n: 'Puente de glúteos en el piso', r: '12 repeticiones', c: 'Boca arriba, rodillas dobladas y pies apoyados. Suba la cadera apretando los glúteos, sostenga un segundo y baje.' },
+    { n: 'Remo con una botella de agua', r: '10 por brazo', c: 'Apoye una mano en una silla, con la espalda recta. Con la otra suba la botella hacia la cintura, con el codo pegado al cuerpo.' },
+    { n: 'Plancha apoyando las rodillas', r: '20 segundos', c: 'Apoye antebrazos y rodillas, con el cuerpo en línea recta del hombro a la rodilla. Apriete el abdomen y respire.', seg: 20 }
+  ];
+  const ALARMA = [
+    'Dolor fuerte y persistente en el abdomen, con o sin vómito.',
+    'Vómito o diarrea que no cede, o no logra tomar líquidos.',
+    'Dolor bajo las costillas del lado derecho, fiebre, o piel y ojos amarillos.',
+    'Hinchazón de cara, labios o garganta, o dificultad para respirar.',
+    'Si usa insulina o pastillas para la diabetes: sudoración, temblor o confusión pueden ser azúcar baja.'
+  ];
+  const AVISE = [
+    'Está embarazada, sospecha embarazo o planea embarazarse.',
+    'Usa pastillas anticonceptivas. Con tirzepatida puede hacer falta un método adicional durante las primeras cuatro semanas y después de cada aumento de dosis.',
+    'Tiene programada una cirugía o un procedimiento con sedación.',
+    'Nota un bulto en el cuello, ronquera que no se quita o dificultad para tragar.'
+  ];
+  const HABLADA = 'Su tratamiento y su dosis son los que le indicó su médico. La farmacia aplica la dosis de su receta, lleva el control de su peso y le acompaña con estas recomendaciones generales. No receta ni cambia dosis: cualquier ajuste, o la decisión de suspender, le corresponde a su médico.';
+  const SINTOMAS = [
+    ['Me siento bien', ''],
+    ['Náusea', 'Coma porciones más pequeñas y evite grasa y frituras. Tome líquidos a sorbos. Suele mejorar con las semanas.'],
+    ['Estreñimiento', 'Suba la fibra (avena, frutas con cáscara, vegetales) y el agua. Caminar también ayuda.'],
+    ['Acidez', 'Cene temprano y liviano, y espere dos horas antes de acostarse.'],
+    ['Diarrea', 'Tome suficientes líquidos. Si dura más de dos días, consulte.'],
+    ['Vómito', '!Si el vómito no cede o no logra tomar líquidos, consulte a su médico hoy mismo.'],
+    ['Dolor abdominal fuerte', '!Un dolor fuerte y persistente en el abdomen necesita valoración médica de inmediato.']
+  ];
+  const CONSEJOS = [
+    'Coma sin pantalla al menos una vez hoy. Ayuda a notar cuándo ya está satisfecho.',
+    'Sirva la comida en un plato más pequeño. La porción se ve completa y se come menos.',
+    'Empiece el almuerzo por la ensalada y la proteína. El arroz queda de último.',
+    'Tenga una botella de agua a la vista. Lo que se ve, se toma.',
+    'Si come fuera, pida doble ensalada en lugar de papas o arroz extra.',
+    'Camine mientras habla por teléfono. Son pasos que no cuestan tiempo.',
+    'Deje lista la ropa de caminar desde la noche anterior.',
+    'Un huevo duro o un yogur natural resuelven una merienda con proteína.',
+    'Los jugos, aunque sean naturales, concentran azúcar. Mejor la fruta entera.',
+    'Dormir poco aumenta el apetito al día siguiente. Cuide el sueño.',
+    'Pésese siempre en la misma romana y a la misma hora. El control de la farmacia es la referencia.',
+    'Si un día se sale del plan, retome en la siguiente comida. No espere al lunes.',
+    'Mastique despacio y suelte el tenedor entre bocados.',
+    'Cocine frijoles para varios días: son proteína y fibra a la mano.'
+  ];
+
+
+  /* ---------- Utilidades ---------- */
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const pad = n => String(n).padStart(2, '0');
+  const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const parse = s => { const a = String(s).split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); };
+  const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+  const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return iso(d); };
+  const diffDays = (a, b) => Math.round((parse(a) - parse(b)) / 86400000);
+  const fechaLarga = s => { const d = parse(s); return DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()]; };
+  const fechaCorta = s => { const d = parse(s); return d.getDate() + ' ' + MESES_C[d.getMonth()] + (d.getFullYear() !== today().getFullYear() ? ' ' + d.getFullYear() : ''); };
+  const num = (n, dec) => Number(n).toLocaleString('es-CR', { minimumFractionDigits: dec == null ? 1 : dec, maximumFractionDigits: dec == null ? 1 : dec });
+  const dosisTxt = n => Number(n).toLocaleString('es-CR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const parseNum = s => { const v = parseFloat(String(s == null ? '' : s).trim().replace(',', '.')); return isFinite(v) ? v : NaN; };
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const $ = id => document.getElementById(id);
+  const primerNombre = () => String(state.nombre).trim().split(/\s+/)[0];
+  const medTxt = t => (t.med === 'otro' && t.medOtro ? t.medOtro : MEDS[t.med].nombre);
+  function codigoDelDia(fecha) {
+    let x = 0x811c9dc5; const t = SEMILLA + '|' + fecha;
+    for (let r = 0; r < 600; r++) {
+      for (let i = 0; i < t.length; i++) { x ^= t.charCodeAt(i); x = Math.imul(x, 0x01000193) >>> 0; }
+      x ^= r; x = Math.imul(x, 0x01000193) >>> 0;
+    }
+    return String(x % 10000).padStart(4, '0');
+  }
+
+  /* ---------- Estado: todo queda en este teléfono ---------- */
+  let storageOK = true;
+  function valido(d) {
+    return !!(d && typeof d.nombre === 'string' && BRANDS[d.farmacia] && Array.isArray(d.registros) &&
+      d.registros.every(r => r && typeof r.fecha === 'string' && (r.origen === 'farmacia' || r.origen === 'casa')));
+  }
+  function normalizar(d) {
+    d.habitos = d.habitos && typeof d.habitos === 'object' ? d.habitos : {};
+    d.sintomas = d.sintomas && typeof d.sintomas === 'object' ? d.sintomas : {};
+    d.tratamiento = d.tratamiento && MEDS[d.tratamiento.med] ? d.tratamiento : null;
+    const limite = addDays(iso(today()), -200);
+    Object.keys(d.habitos).forEach(k => { if (k < limite) delete d.habitos[k]; });
+    Object.keys(d.sintomas).forEach(k => { if (k < limite) delete d.sintomas[k]; });
+    return d;
+  }
+  function load() {
+    let raw = null;
+    try { raw = localStorage.getItem(KEY); } catch (e) { storageOK = false; return null; }
+    if (!raw) return null;
+    try { const d = JSON.parse(raw); if (valido(d)) return normalizar(d); } catch (e) { /* datos dañados */ }
+    return null;
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); storageOK = true; } catch (e) { storageOK = false; } }
+
+  let state = load();
+  const ui = { tab: 'inicio', seg: 'comer', sheet: null, onb: null, molestias: false, selloNuevo: false, fallos: 0, bloqueo: 0 };
+
+  function hab(f) { const h = state.habitos[f] || {}; return { agua: h.agua || 0, proteina: !!h.proteina, caminata: !!h.caminata, fuerza: !!h.fuerza, fuerzaTipo: h.fuerzaTipo === 'Rutina de la guía' ? 'En casa' : (h.fuerzaTipo || '') }; }
+  function setHab(f, cambios) { state.habitos[f] = Object.assign(hab(f), cambios); save(); }
+  const hechos = h => (h.agua >= VASOS ? 1 : 0) + (h.proteina ? 1 : 0) + (h.caminata ? 1 : 0) + (h.fuerza ? 1 : 0);
+
+  function calc() {
+    const hoy = iso(today());
+    const rs = state.registros.slice().sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
+    const pes = rs.filter(r => r.peso > 0);
+    const ini = pes.length ? pes[0].peso : null, act = pes.length ? pes[pes.length - 1].peso : null;
+    const vis = rs.filter(r => r.origen === 'farmacia');
+    const apl = vis.filter(r => r.dosis > 0);
+    const ultVis = vis.length ? vis[vis.length - 1] : null;
+    const ultApl = apl.length ? apl[apl.length - 1] : null;
+    const prox = ultVis ? addDays(ultVis.fecha, 7) : null;
+    const dias = prox ? diffDays(prox, hoy) : null;
+    let rest = null, porPluma = 4;
+    apl.forEach(r => { if (r.plumaNueva || rest === null || rest <= 0) { porPluma = r.dosisPorPluma || 4; rest = porPluma; } rest -= 1; });
+    const cambio = (ini != null && act != null) ? act - ini : 0;
+    const pct = ini ? -cambio / ini * 100 : 0;
+    const imc = (act && state.estatura) ? act / Math.pow(state.estatura / 100, 2) : null;
+    return { rs, pes, ini, act, vis, apl, ultVis, ultApl, prox, dias, restantes: rest, porPluma, cambio, pct, imc, sellos: vis.length, selladoHoy: !!(ultVis && ultVis.fecha === hoy) };
+  }
+  function bloqueSellos(c) { const enBloque = c.sellos === 0 ? 0 : ((c.sellos - 1) % 4) + 1; return { enBloque, inicio: c.sellos - enBloque }; }
+
+  /* ---------- Bienvenida ---------- */
+  function vistaBienvenida() {
+    return '<section class="onb"><div class="tile">' + LOGO + '</div>' +
+      '<h1>Mi control de peso</h1>' +
+      '<p class="bajada">Su peso, sus hábitos y el carné de su control semanal en la farmacia, en su celular.</p>' +
+      '<div class="campo"><span>¿Cuál es su farmacia?</span><div class="opciones">' +
+      Object.keys(BRANDS).map(k => '<button class="opcion" data-act="onb-marca" data-marca="' + k + '" aria-pressed="' + (ui.onb === k) + '"><small>Farmacia</small>' + BRANDS[k] + '</button>').join('') + '</div></div>' +
+      '<label class="campo"><span>¿Cómo se llama?</span><input class="inp" id="o-nombre" autocomplete="given-name" placeholder="Su nombre"></label>' +
+      '<div id="f-error" class="error" hidden></div>' +
+      '<div class="acciones"><button class="btn btn-p btn-g" data-act="onb-empezar">Empezar</button></div>' +
+      '<p class="muted" style="margin-top:1rem">Sus datos quedan guardados solo en este teléfono.</p>' +
+      '<button class="enlace" data-act="restaurar-abrir">Ya usaba la app en otro teléfono</button></section>';
+  }
+
+  /* ---------- Marco ---------- */
+  function top() {
+    return '<header class="top"><div class="tile">' + LOGO + '</div><div class="wordmark"><small>Farmacia</small><strong>' + BRANDS[state.farmacia] + '</strong></div></header>';
+  }
+  function tabs() {
+    const t = [['inicio', 'Inicio'], ['avance', 'Mi avance'], ['guia', 'Guía'], ['carne', 'Mi carné']];
+    return '<nav class="tabs" aria-label="Secciones"><div class="tabs-in">' + t.map(x =>
+      '<button class="tab" data-act="tab" data-tab="' + x[0] + '"' + (ui.tab === x[0] ? ' aria-current="page"' : '') + '>' + trazo(ICONOS[x[0]]) + x[1] + '</button>').join('') + '</div></nav>';
+  }
+
+  /* ---------- Inicio ---------- */
+  function vistaInicio() {
+    const c = calc(), hoy = iso(today()), h = hab(hoy), f = 'Farmacia ' + BRANDS[state.farmacia];
+    let tit, baj;
+    if (c.dias === null) { tit = 'Empecemos su control de peso'; baj = ''; }
+    else if (c.selladoHoy) { tit = 'Control de hoy listo'; baj = 'El próximo es el ' + fechaLarga(c.prox) + '.'; }
+    else if (c.dias > 1) { tit = 'Faltan ' + c.dias + ' días para su control'; baj = 'Le esperamos el ' + fechaLarga(c.prox) + ' en ' + f + '.'; }
+    else if (c.dias === 1) { tit = 'Mañana le toca su control'; baj = 'Le esperamos en ' + f + '.'; }
+    else if (c.dias === 0) { tit = 'Hoy le toca su control'; baj = 'Le esperamos en ' + f + ' para su peso y su dosis de la semana.'; }
+    else { tit = 'Su control era el ' + fechaLarga(c.prox); baj = 'Pase por la farmacia y vemos con usted cómo retomar.'; }
+
+    let html = '<section class="view"><p class="fecha cap">' + fechaLarga(hoy) + '</p>' +
+      '<h1 class="titular">Hola, ' + esc(primerNombre()) + '. ' + tit + '</h1>' + (baj ? '<p class="bajada">' + baj + '</p>' : '');
+    if (!storageOK) html += '<p class="nota nota-alert">Este navegador no guarda datos. Abra la app en Chrome o Safari, no dentro de WhatsApp.</p>';
+
+    /* Carné en pequeño, siempre a la vista: los cuatro sellos del mes */
+    const b = bloqueSellos(c); let cs = '';
+    for (let k = 0; k < 4; k++) cs += k < b.enBloque ? '<i class="s">' + SELLO + '</i>' : '<i>' + (k + 1) + '</i>';
+    html += '<button class="franja" data-act="tab" data-tab="carne"><span class="franja-t"><b>Mi carné</b><em>' + (c.sellos ? b.enBloque + ' de 4 sellos este mes' : 'Todavía sin sellos') + ' ›</em></span>' +
+      '<span class="franja-s" aria-hidden="true">' + cs + '</span></button>';
+    if (!c.selladoHoy && (c.sellos === 0 || c.dias <= 0)) html += '<div class="acciones" style="margin-top:.6rem"><button class="btn btn-p btn-g" data-act="control-abrir">Estoy en la farmacia: sellar mi carné</button></div>';
+    if (c.sellos === 0) {
+      html += '<div class="pasos"><h2>Así funciona</h2><ol>' +
+        '<li><i>1</i><span>Cada día marque aquí lo que hizo: agua, comida, caminata y ejercicio.</span></li>' +
+        '<li><i>2</i><span>Cada semana pase a la farmacia a pesarse y aplicarse la dosis de su receta.</span></li>' +
+        '<li><i>3</i><span>Ahí mismo pida el código del día y selle su carné. Cada control es un sello.</span></li></ol></div>';
+    }
+
+    /* Hábitos de hoy: un toque marca, otro toque desmarca */
+    const fila = (k, ico, t, d) => '<div class="celda"><button class="hab" data-act="hab" data-k="' + k + '" aria-pressed="' + h[k] + '">' +
+      '<span class="hab-ico">' + trazo(ICONOS[ico]) + '</span><span class="hab-t"><b>' + t + '</b><small>' + d + '</small></span><span class="marca" aria-hidden="true">' + CHECK + '</span></button></div>';
+    let vasos = ''; for (let k = 1; k <= VASOS; k++) vasos += '<i' + (k <= h.agua ? ' class="lleno"' : '') + '></i>';
+    html += '<div class="bloque"><h2>¿Qué hizo hoy?</h2><div class="lista">' +
+      '<div class="celda"><div class="hab"><span class="hab-ico">' + trazo(ICONOS.agua) + '</span><span class="hab-t"><b>Agua</b><small>' +
+      (h.agua >= VASOS ? 'Meta cumplida: ' + VASOS + ' vasos' : h.agua + ' de ' + VASOS + ' vasos') + '</small><span class="vasos" aria-hidden="true">' + vasos + '</span></span>' +
+      '<button class="redondo redondo-s" data-act="agua-menos" aria-label="Quitar un vaso"' + (h.agua ? '' : ' disabled') + '>' + MENOS + '</button>' +
+      '<button class="redondo" data-act="agua-mas" aria-label="Sumar un vaso"' + (h.agua >= VASOS ? ' disabled' : '') + '>' + MAS + '</button></div></div>' +
+      fila('proteina', 'proteina', 'Comí proteína en cada comida', 'Huevo, pollo, pescado, frijoles, yogur') +
+      fila('caminata', 'caminata', 'Caminé', 'La meta son 30 minutos') +
+      '<div class="celda"><button class="hab" data-act="hab" data-k="fuerza" aria-pressed="' + h.fuerza + '"><span class="hab-ico">' + trazo(ICONOS.ejercicio) + '</span>' +
+      '<span class="hab-t"><b>Hice ejercicio</b><small>' + (h.fuerza && h.fuerzaTipo ? h.fuerzaTipo : 'Gimnasio, pilates, yoga, en casa: todo cuenta') + '</small></span><span class="marca" aria-hidden="true">' + CHECK + '</span></button>' +
+      '<div class="hab-extra">' + (h.fuerza
+        ? '<p>¿Qué hizo? Es opcional.</p><div class="chips">' + TIPOS.map(t => '<button class="chip" data-act="tipo" data-v="' + t + '" aria-pressed="' + (h.fuerzaTipo === t) + '">' + t + '</button>').join('') + '</div>'
+        : '<button class="enlace" data-act="rutina-abrir">No tengo rutina: ver una fácil para la casa</button>') + '</div></div></div></div>';
+
+    /* Cómo se siente */
+    const sel = state.sintomas[hoy] || [], bien = sel.indexOf('Me siento bien') >= 0, mol = sel.filter(x => x !== 'Me siento bien');
+    const abierto = !bien && (mol.length > 0 || ui.molestias);
+    html += '<div class="bloque"><h2>¿Cómo se siente hoy?</h2><div class="dos-btn">' +
+      '<button class="op-m" data-act="siento" data-v="bien" aria-pressed="' + bien + '">Bien</button>' +
+      '<button class="op-m" data-act="siento" data-v="mal" aria-pressed="' + abierto + '">Con molestias</button></div>';
+    if (abierto) {
+      html += '<p class="muted" style="margin:.8rem 0 .45rem">Marque lo que siente:</p><div class="chips">' +
+        SINTOMAS.filter(s => s[0] !== 'Me siento bien').map(s => '<button class="chip" data-act="sintoma" data-v="' + s[0] + '" aria-pressed="' + (mol.indexOf(s[0]) >= 0) + '">' + s[0] + '</button>').join('') + '</div>' +
+        SINTOMAS.filter(s => s[1] && mol.indexOf(s[0]) >= 0).map(s => s[1].charAt(0) === '!'
+          ? '<p class="nota nota-alert">' + esc(s[1].slice(1)) + '</p>' : '<p class="nota nota-info"><b>' + s[0] + '.</b> ' + esc(s[1]) + '</p>').join('');
+    }
+    html += '</div>';
+
+    const d0 = today(), dia = Math.floor((d0 - new Date(d0.getFullYear(), 0, 0)) / 86400000);
+    html += '<div class="bloque"><h2>Consejo de hoy</h2><p class="consejo">' + esc(CONSEJOS[dia % CONSEJOS.length]) + '</p></div></section>';
+    return html;
+  }
+
+  function grafico(pes) {
+    if (pes.length < 2) return '<p class="muted" style="margin-top:.6rem">El gráfico aparece con la segunda pesada.</p>';
+    const W = 340, H = 150, pl = 38, pr = 10, pt = 12, pb = 22;
+    const xs = pes.map(p => parse(p.fecha).getTime()), ys = pes.map(p => p.peso);
+    const dMin = Math.min.apply(null, ys), dMax = Math.max.apply(null, ys);
+    let y0 = dMin, y1 = dMax;
+    if (y1 - y0 < 2) { const mid = (y0 + y1) / 2; y0 = mid - 1; y1 = mid + 1; }
+    const m = (y1 - y0) * 0.18; y0 -= m; y1 += m;
+    const x0 = xs[0], x1 = xs[xs.length - 1];
+    const X = t => pl + (W - pl - pr) * ((t - x0) / ((x1 - x0) || 1));
+    const Y = v => pt + (H - pt - pb) * (1 - (v - y0) / (y1 - y0));
+    const P = pes.map((p, k) => [X(xs[k]).toFixed(1), Y(p.peso).toFixed(1)]);
+    const area = 'M' + P[0][0] + ',' + (H - pb) + ' L' + P.map(p => p.join(',')).join(' L') + ' L' + P[P.length - 1][0] + ',' + (H - pb) + ' Z';
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Peso de ' + num(pes[0].peso) + ' a ' + num(pes[pes.length - 1].peso) + ' kg entre el ' + fechaCorta(pes[0].fecha) + ' y el ' + fechaCorta(pes[pes.length - 1].fecha) + '">' +
+      '<line class="eje" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(dMax).toFixed(1) + '" y2="' + Y(dMax).toFixed(1) + '" stroke-dasharray="3 4"/>' +
+      '<line class="eje" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + (H - pb) + '" y2="' + (H - pb) + '"/>' +
+      '<path class="area" d="' + area + '"/><polyline class="linea" points="' + P.map(p => p.join(',')).join(' ') + '"/>' +
+      P.map((p, k) => '<circle class="pto' + (pes[k].origen === 'farmacia' ? ' pto-f' : '') + '" cx="' + p[0] + '" cy="' + p[1] + '" r="3.6"/>').join('') +
+      '<text x="' + (pl - 6) + '" y="' + (Y(dMax) + 4).toFixed(1) + '" text-anchor="end">' + num(dMax) + '</text>' +
+      '<text x="' + (pl - 6) + '" y="' + (Y(dMin) + 4).toFixed(1) + '" text-anchor="end">' + num(dMin) + '</text>' +
+      '<text x="' + pl + '" y="' + (H - 6) + '">' + fechaCorta(pes[0].fecha) + '</text>' +
+      '<text x="' + (W - pr) + '" y="' + (H - 6) + '" text-anchor="end">' + fechaCorta(pes[pes.length - 1].fecha) + '</text></svg>' +
+      '<div class="leyenda"><span><i class="f"></i>Control en farmacia</span><span><i></i>Pesada en casa</span></div>';
+  }
+
+  /* ---------- Mi avance ---------- */
+  function vistaAvance() {
+    const c = calc(), hoy = iso(today());
+    let h = '<section class="view"><h1 class="h-vista">Mi avance</h1>';
+    if (c.act == null) {
+      h += '<p class="bajada" style="margin-top:.5rem">Todavía no hay pesadas. La de la farmacia es la que cuenta, y entre semana puede anotar la de su casa.</p>';
+    } else {
+      h += '<div style="margin-top:1rem"><div class="peso-act"><b>' + num(c.act) + '</b><span>kg</span></div>';
+      if (c.pes.length > 1) h += '<p class="cambio">' + (c.cambio < 0 ? '<b>' + num(-c.cambio) + ' kg menos</b> desde que empezó' : c.cambio > 0 ? num(c.cambio) + ' kg más que al empezar' : 'Mismo peso que al empezar') + '</p>';
+      h += '</div>';
+    }
+    h += '<div class="acciones"><button class="btn btn-p btn-g" data-act="peso-nuevo">Anotar mi peso</button></div>';
+    if (c.act != null) {
+      h += grafico(c.pes);
+      if (c.imc && c.imc < 18.5) h += '<p class="nota nota-alert">Su peso está por debajo de lo saludable para su estatura. Hable con su médico antes de seguir bajando.</p>';
+      else if (c.imc && c.imc < 25) h += '<p class="nota nota-info">Su peso ya está en rango saludable. Converse con su médico sobre la meta del tratamiento.</p>';
+      if (c.ini && c.pes.length > 1) {
+        const meta = c.pct >= 5 ? 10 : 5, kg = c.ini * meta / 100, lleva = Math.max(0, -c.cambio);
+        h += '<div class="bloque"><h2>' + (c.pct >= 10 ? 'Ya bajó más del 10 % de su peso inicial' : c.pct >= 5 ? 'Ya bajó el 5 %. Siguiente meta: 10 %' : 'Primera meta: bajar el 5 % de su peso inicial') + '</h2>';
+        if (c.pct < 10) h += '<div class="hito-barra" aria-hidden="true"><i style="width:' + Math.min(100, Math.max(0, lleva / kg * 100)).toFixed(0) + '%"></i></div>' +
+          '<p class="muted" style="margin-top:.4rem">Lleva ' + num(lleva) + ' de ' + num(kg) + ' kg. Con eso ya mejoran la presión, el azúcar y el dolor de rodillas.</p>';
+        else h += '<p class="muted">La meta final la define su médico.</p>';
+        h += '</div>';
+      }
+    }
+    /* Semana */
+    const d0 = today(), lunes = addDays(hoy, -((d0.getDay() + 6) % 7)), letras = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    let sem = '', cam = 0, eje = 0;
+    for (let k = 0; k < 7; k++) {
+      const fch = addDays(lunes, k), hh = hab(fch), n = Math.min(3, hechos(hh));
+      if (hh.caminata) cam++; if (hh.fuerza) eje++;
+      sem += '<div' + (fch === hoy ? ' class="hoy"' : '') + '><i' + (n ? ' class="n' + n + '"' : '') + '></i>' + letras[k] + '</div>';
+    }
+    h += '<div class="bloque"><h2>Mis hábitos de esta semana</h2><div class="semana" aria-hidden="true">' + sem + '</div><p class="muted" style="margin-top:.6rem">' +
+      (cam || eje ? 'Caminó ' + cam + (cam === 1 ? ' día' : ' días') + ' e hizo ejercicio ' + eje + (eje === 1 ? ' vez' : ' veces') + '.' : 'Cada hábito que marque en Inicio rellena el día.') + '</p></div>';
+
+    if (c.rs.length) {
+      h += '<div class="bloque"><h2>Mis pesadas</h2><div class="lista">' + c.rs.slice().reverse().map(r =>
+        '<div class="reg"><div class="reg-f"><b>' + fechaCorta(r.fecha) + '</b><span>' + (r.origen === 'farmacia' ? 'En la farmacia' : 'En casa') + '</span></div><span class="reg-p">' + (r.peso ? num(r.peso) + ' kg' : '') + '</span>' +
+        '<button class="reg-del" data-act="borrar-reg" data-id="' + r.id + '">Quitar</button></div>').join('') + '</div></div>';
+    }
+    return h + '</section>';
+  }
+
+  function vistaGuia() {
+    const li = a => a.map(t => '<li>' + esc(t) + '</li>').join('');
+    let h = '<section class="view guia"><h1 class="h-vista">Guía</h1><div class="seg" role="group" aria-label="Secciones de la guía">' +
+      [['comer', 'Comer'], ['moverse', 'Moverse'], ['cuidarse', 'Cuidarse']].map(s => '<button data-act="seg" data-seg="' + s[0] + '" aria-pressed="' + (ui.seg === s[0]) + '">' + s[1] + '</button>').join('') + '</div>';
+    if (ui.seg === 'comer') {
+      h += '<h2>Así se arma el plato</h2><div class="plato">' +
+        '<svg viewBox="0 0 220 220" role="img" aria-label="Plato: mitad vegetales, un cuarto proteína, un cuarto harinas">' +
+        '<circle cx="110" cy="110" r="106" fill="var(--line)"/>' +
+        '<path d="M110 12A98 98 0 0 0 110 208Z" fill="var(--veg)"/><path d="M110 110V12a98 98 0 0 1 98 98Z" fill="var(--prot)"/><path d="M110 110h98a98 98 0 0 1-98 98Z" fill="var(--har)"/>' +
+        '<path d="M110 12v196M110 110h98" stroke="var(--surface)" stroke-width="5"/></svg>' +
+        '<ul><li><i style="background:var(--veg)"></i><span><b>Media parte: vegetales.</b> Ensalada, picadillos, vegetales al vapor.</span></li>' +
+        '<li><i style="background:var(--prot)"></i><span><b>Un cuarto: proteína.</b> Pollo, pescado, huevo, frijoles.</span></li>' +
+        '<li><i style="background:var(--har)"></i><span><b>Un cuarto: harinas.</b> Arroz, pastas, tortilla, yuca, plátano, papa.</span></li></ul></div>' +
+        '<h2>Lo básico</h2><ul class="puntos">' + li(COMER) + '</ul>' +
+        '<h2>Ideas para un día</h2><ul class="tabla">' + MENU.map(m => '<li><b>' + m[0] + '</b><span>' + esc(m[1]) + '</span></li>').join('') + '</ul>';
+    } else if (ui.seg === 'moverse') {
+      h += '<h2>Caminar, de menos a más</h2><ul class="tabla">' + CAMINAR.map(m => '<li><b>' + m[0] + '</b><span>' + m[1] + '</span></li>').join('') + '</ul>' +
+        '<h2>Ejercicio: el que usted prefiera</h2><p>Si ya va al gimnasio o hace pilates, yoga u otra actividad, siga con eso y márquelo en Inicio como ejercicio hecho. La meta son dos o tres sesiones por semana, además de caminar.</p>' +
+        '<h2>Si no tiene rutina, empiece con esta</h2><p>Es una base para hacer en casa: dos o tres vueltas, con un minuto de descanso entre una y otra. No necesita equipo, solo una silla, una pared y una botella de agua.</p>' +
+        '<ul class="tabla" style="margin-top:.7rem">' + RUTINA.map(r => '<li class="par"><b>' + r.n + '</b><span>' + r.r + '</span></li>').join('') + '</ul>' +
+        '<div class="acciones"><button class="btn btn-p" data-act="rutina-abrir">Iniciar rutina guiada</button></div>' +
+        '<ul class="puntos" style="margin-top:1rem"><li>Cualquiera que sea su actividad, incluya algo de fuerza: al bajar de peso también se pierde músculo si no se usa.</li>' +
+        '<li>Si tiene problemas de rodilla, de espalda o del corazón, consulte a su médico antes de empezar.</li></ul>';
+    } else {
+      h += '<h2>Cuándo consultar al médico</h2><h3>De inmediato, si presenta</h3><ul class="puntos puntos-alerta">' + li(ALARMA) + '</ul>' +
+        '<h3>Avísele también si</h3><ul class="puntos">' + li(AVISE) + '</ul>' +
+        '<h2>Molestias frecuentes</h2><ul class="tabla">' + SINTOMAS.filter(s => s[1] && s[1].charAt(0) !== '!').map(s => '<li><b>' + s[0] + '</b><span>' + esc(s[1]) + '</span></li>').join('') + '</ul>';
+    }
+    h += '<p class="hablada">' + esc(HABLADA) + '</p></section>';
+    return h;
+  }
+
+
+  /* ---------- Mi carné ---------- */
+  function vistaCarne() {
+    const c = calc(), b = bloqueSellos(c), t = state.tratamiento, f = 'Farmacia ' + BRANDS[state.farmacia];
+    let sellos = '';
+    for (let k = 0; k < 4; k++) {
+      const r = c.vis[b.inicio + k];
+      sellos += r ? '<div class="sello ok' + (ui.selloNuevo && b.inicio + k === c.sellos - 1 ? ' nuevo' : '') + '"><i>' + SELLO + '</i>' + fechaCorta(r.fecha) + '</div>'
+        : '<div class="sello"><i>' + (k + 1) + '</i>Pendiente</div>';
+    }
+    ui.selloNuevo = false;
+    let h = '<section class="view"><div class="carnet"><div class="carnet-cab">' + LOGO + '<div><small>' + f + '</small><strong>Carné de control de peso</strong></div></div>' +
+      '<p class="carnet-nombre">' + esc(state.nombre) + '</p><p class="carnet-sub">' + (c.sellos === 0 ? 'Todavía sin sellos' : c.sellos === 1 ? '1 control en la farmacia' : c.sellos + ' controles en la farmacia') + '</p>' +
+      '<div class="sellos">' + sellos + '</div></div>';
+
+    h += '<div class="acciones"><button class="btn btn-p btn-g" data-act="control-abrir"' + (c.selladoHoy ? ' disabled style="opacity:.5"' : '') + '>' + (c.selladoHoy ? 'Carné sellado hoy' : 'Estoy en la farmacia: sellar mi carné') + '</button></div>' +
+      '<p class="muted" style="margin-top:.5rem">' + (c.selladoHoy ? 'Su próximo control es el ' + fechaLarga(c.prox) + '.' : 'Un sello por cada control semanal. Con cuatro completa el mes.') + '</p>';
+
+    h += '<div class="bloque"><h2>Mi tratamiento</h2><div class="receta">' +
+      (t ? '<strong>' + esc(medTxt(t)) + ', ' + dosisTxt(t.dosis) + ' mg por semana</strong>' : '<strong>Se anota la primera vez que selle su carné</strong>') +
+      '<em>La dosis es la que indica la receta de su médico. La farmacia la aplica y lleva el control, no la cambia.</em></div>';
+    if (t && t.med === 'mounjaro' && c.restantes !== null) {
+      const tot = Math.min(c.porPluma, 8); let seg = '';
+      for (let k = 0; k < tot; k++) seg += '<i' + (k < c.restantes ? ' class="q"' : '') + '></i>';
+      h += '<div class="pluma" aria-hidden="true">' + seg + '</div><p style="margin-top:.35rem">' +
+        (c.restantes <= 0 ? 'Su pluma se terminó' : c.restantes === 1 ? 'Le queda 1 dosis en la pluma' : 'Le quedan ' + c.restantes + ' dosis en la pluma') + '</p>';
+      if (c.restantes <= 1) h += '<p class="nota nota-warn">Pronto necesita pluma nueva. Revise que su receta esté vigente o pídale la renovación a su médico.</p>';
+    }
+    h += '</div>';
+
+    h += '<details class="mas"><summary>Más opciones</summary><div class="pila">';
+    if (c.prox) {
+      const d1 = c.prox.replace(/-/g, ''), d2 = addDays(c.prox, 1).replace(/-/g, '');
+      h += '<a class="btn btn-s" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('Control de peso en ' + f) +
+        '&dates=' + d1 + '/' + d2 + '&recur=' + encodeURIComponent('RRULE:FREQ=WEEKLY') + '&details=' + encodeURIComponent('Control semanal de peso y aplicación del tratamiento indicado por su médico.') + '">Recordatorio semanal en mi calendario</a>';
+    }
+    if (WHATSAPP[state.farmacia]) h += '<a class="btn btn-s" target="_blank" rel="noopener" href="https://wa.me/506' + WHATSAPP[state.farmacia] + '?text=' +
+      encodeURIComponent('Hola, soy ' + state.nombre + ', del control de peso. ') + '">Escribir a la farmacia por WhatsApp</a>';
+    h += '<button class="btn btn-s" data-act="perfil">Cambiar mi nombre, estatura o farmacia</button>' +
+      '<button class="btn btn-s" data-act="respaldo">Guardar una copia de mis datos</button>' +
+      '<button class="btn btn-s" data-act="restaurar-abrir">Recuperar una copia</button>' +
+      '<button class="btn btn-d" data-act="borrar-todo">Borrar todos mis datos</button></div></details>' +
+      '<p class="muted" style="margin-top:.8rem">Sus datos están solo en este teléfono. Si lo cambia, guarde antes una copia.</p></section>';
+    return h;
+  }
+
+  function render() {
+    if (!state) { document.documentElement.setAttribute('data-brand', ui.onb || 'gil'); $('app').innerHTML = vistaBienvenida(); return; }
+    document.documentElement.setAttribute('data-brand', state.farmacia);
+    const v = ui.tab === 'avance' ? vistaAvance() : ui.tab === 'guia' ? vistaGuia() : ui.tab === 'carne' ? vistaCarne() : vistaInicio();
+    $('app').innerHTML = top() + '<main>' + v + '</main>' + tabs();
+  }
+
+  /* ---------- Hojas inferiores ---------- */
+  function abrirSheet(s) { pararReloj(); ui.sheet = s; renderSheet(); }
+  function cerrarSheet() { pararReloj(); ui.sheet = null; $('sheet-root').innerHTML = ''; }
+  function marco(titulo, cuerpo) {
+    return '<div class="backdrop" data-act="fondo"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">' +
+      '<div class="sheet-cab"><h2 id="sheet-t" tabindex="-1">' + titulo + '</h2><button class="cerrar" data-act="cerrar" aria-label="Cerrar">' + X_ICON + '</button></div>' + cuerpo + '</div></div>';
+  }
+  function error(msg) { const e = $('f-error'); if (e) { e.textContent = msg; e.hidden = false; e.scrollIntoView({ block: 'nearest' }); } }
+  function confirmar(o) { abrirSheet(Object.assign({ tipo: 'confirmar' }, o)); }
+  function codigoValido(v) {
+    if (Date.now() < ui.bloqueo) { error('Demasiados intentos. Espere un minuto.'); return false; }
+    const c = String(v || '').replace(/\D/g, ''), hoy = iso(today());
+    /* se acepta un día de margen por si el reloj del teléfono está corrido */
+    if (c.length === 4 && [0, -1, 1].some(n => codigoDelDia(addDays(hoy, n)) === c)) { ui.fallos = 0; return true; }
+    ui.fallos++; if (ui.fallos >= 5) { ui.bloqueo = Date.now() + 60000; ui.fallos = 0; }
+    error('Ese no es el código de hoy. Pídaselo de nuevo al personal de la farmacia.'); return false;
+  }
+
+  /* ---------- Sellar el carné: una pregunta por pantalla ---------- */
+  function pasosControl(d) {
+    const p = ['peso', 'aplicada'];
+    if (d.aplicada) {
+      if (state.tratamiento) p.push('igual');
+      if (!state.tratamiento || d.igual === false) p.push('med', 'dosis');
+      p.push('sitio');
+      if (d.med === 'mounjaro') p.push('pluma');
+    }
+    p.push('codigo');
+    return p;
+  }
+  function abrirControl() {
+    if (calc().selladoHoy) return toast('El control de hoy ya está sellado en su carné.');
+    const t = state.tratamiento;
+    abrirSheet({ tipo: 'control', paso: 'peso', d: { peso: null, aplicada: null, igual: null, med: t ? t.med : null, medOtro: t ? t.medOtro || '' : '', dosis: t ? t.dosis : null, otra: false, sitio: null, pluma: null } });
+  }
+  function cuerpoControl() {
+    const s = ui.sheet, d = s.d, c = calc();
+    if (s.paso === 'listo') {
+      return '<div class="wz-listo"><div class="sello-g">' + LOGO + '</div><p class="wz-q" style="margin-top:0">Carné sellado</p>' +
+        '<p class="wz-ayuda">Su próximo control es el ' + fechaLarga(addDays(iso(today()), 7)) + '.</p></div>' +
+        '<div class="acciones"><button class="btn btn-p btn-g" data-act="control-fin">Ver mi carné</button></div>';
+    }
+    const ps = pasosControl(d), k = ps.indexOf(s.paso);
+    /* el total se calcula con el camino más largo posible, para que la barra nunca retroceda */
+    const total = Math.max(ps.length, pasosControl(Object.assign({}, d, { aplicada: d.aplicada === null ? true : d.aplicada, med: d.med || 'mounjaro' })).length);
+    let barra = ''; for (let n = 0; n < total; n++) barra += '<i' + (n <= k ? ' class="h"' : '') + '></i>';
+    let h = '<div class="wz-nav"><button class="atras" data-act="control-atras">' + (k === 0 ? 'Cancelar' : '‹ Atrás') + '</button><div class="wz-barra" aria-hidden="true">' + barra + '</div></div>';
+    const op = (campo, v, txt, sub, sel) => '<button class="op-g" data-act="control-op" data-campo="' + campo + '" data-v="' + v + '" aria-pressed="' + !!sel + '">' + txt + (sub ? '<small>' + sub + '</small>' : '') + '</button>';
+    const sig = txt => '<div id="f-error" class="error" hidden></div><div class="acciones"><button class="btn btn-p btn-g" data-act="control-ok">' + (txt || 'Siguiente') + '</button></div>';
+
+    if (s.paso === 'peso') {
+      h += '<p class="wz-q">¿Cuánto pesó hoy?</p><p class="wz-ayuda">El peso de la romana de la farmacia.</p>' +
+        '<div class="wz-num"><input id="wz-in" inputmode="decimal" autocomplete="off" aria-label="Peso en kilos" value="' + (d.peso ? esc(num(d.peso)) : '') + '" placeholder="' + (c.act ? num(c.act) : '0,0') + '"><span>kg</span></div>' + sig();
+    } else if (s.paso === 'aplicada') {
+      h += '<p class="wz-q">¿Le aplicaron hoy su dosis?</p><div class="wz-ops">' + op('aplicada', 'si', 'Sí', '', d.aplicada === true) + op('aplicada', 'no', 'No, solo me pesé', '', d.aplicada === false) + '</div>';
+    } else if (s.paso === 'igual') {
+      const t = state.tratamiento;
+      h += '<p class="wz-q">¿Fue la misma dosis de siempre?</p><p class="wz-ayuda">' + esc(medTxt(t)) + ', ' + dosisTxt(t.dosis) + ' mg</p><div class="wz-ops">' +
+        op('igual', 'si', 'Sí, la misma', '', d.igual === true) + op('igual', 'no', 'No, cambió', 'Por indicación de su médico', d.igual === false) + '</div>';
+    } else if (s.paso === 'med') {
+      h += '<p class="wz-q">¿Cuál es su medicamento?</p><p class="wz-ayuda">El de su receta médica.</p><div class="wz-ops">' +
+        op('med', 'mounjaro', 'Mounjaro', 'tirzepatida', d.med === 'mounjaro') + op('med', 'ozempic', 'Ozempic', 'semaglutida', d.med === 'ozempic') + op('med', 'otro', 'Otro', '', d.med === 'otro') + '</div>';
+      if (d.med === 'otro') h += '<label class="campo"><span>¿Cómo se llama?</span><input class="inp" id="wz-in" autocomplete="off" value="' + esc(d.medOtro) + '"></label>' + sig();
+    } else if (s.paso === 'dosis') {
+      const ds = MEDS[d.med].dosis;
+      h += '<p class="wz-q">¿Qué dosis le aplicaron?</p><p class="wz-ayuda">La que indica su receta, en miligramos.</p>';
+      if (ds.length && !d.otra) h += '<div class="wz-ops tres">' + ds.map(x => op('dosis', x, dosisTxt(x) + ' mg', '', d.dosis === x)).join('') + '</div><button class="enlace" data-act="control-otra" style="margin-top:.6rem">Es otra dosis</button>';
+      else h += '<div class="wz-num"><input id="wz-in" inputmode="decimal" autocomplete="off" aria-label="Dosis en miligramos"><span>mg</span></div>' + sig();
+    } else if (s.paso === 'sitio') {
+      h += '<p class="wz-q">¿Dónde se la aplicaron?</p>' + (c.ultApl && c.ultApl.sitio ? '<p class="wz-ayuda">La vez pasada fue en ' + c.ultApl.sitio.toLowerCase() + '. Conviene ir rotando.</p>' : '') +
+        '<div class="wz-ops">' + SITIOS.map(x => op('sitio', x, x, '', d.sitio === x)).join('') + '</div>';
+    } else if (s.paso === 'pluma') {
+      h += '<p class="wz-q">¿Hoy abrieron una pluma nueva?</p><p class="wz-ayuda">Cada pluma trae 4 dosis. Así la app le avisa cuando se esté terminando.</p><div class="wz-ops">' +
+        op('pluma', 'si', 'Sí, pluma nueva', '', d.pluma === true) + op('pluma', 'no', 'No, la misma', '', d.pluma === false) + '</div>';
+    } else if (s.paso === 'codigo') {
+      h += '<p class="wz-q">Código del día</p><p class="wz-ayuda">Pídaselo al personal de la farmacia. Son 4 números.</p>' +
+        '<div class="wz-num wz-cod"><input id="wz-in" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="Código del día"></div>' + sig('Sellar mi carné');
+    }
+    return h;
+  }
+  function controlIr(delta) {
+    const s = ui.sheet, ps = pasosControl(s.d), k = ps.indexOf(s.paso);
+    if (delta < 0 && k <= 0) return cerrarSheet();
+    s.paso = ps[Math.min(ps.length - 1, Math.max(0, k + delta))]; renderSheet();
+  }
+  function controlOpcion(campo, v) {
+    const d = ui.sheet.d, t = state.tratamiento;
+    if (campo === 'aplicada') d.aplicada = v === 'si';
+    else if (campo === 'igual') { d.igual = v === 'si'; if (d.igual) { d.med = t.med; d.medOtro = t.medOtro || ''; d.dosis = t.dosis; } else { d.dosis = null; } }
+    else if (campo === 'med') { if (d.med !== v) { d.dosis = null; d.otra = false; } d.med = v; if (v === 'otro') return renderSheet(); }
+    else if (campo === 'dosis') d.dosis = parseFloat(v);
+    else if (campo === 'sitio') d.sitio = v;
+    else if (campo === 'pluma') d.pluma = v === 'si';
+    controlIr(1);
+  }
+  function controlOk() {
+    const s = ui.sheet, d = s.d, inp = $('wz-in'), v = inp ? inp.value : '';
+    if (s.paso === 'peso') { const p = parseNum(v); if (!(p >= 25 && p <= 350)) return error('Anote su peso en kilos, por ejemplo 82,4.'); d.peso = Math.round(p * 10) / 10; return controlIr(1); }
+    if (s.paso === 'med') { if (!v.trim()) return error('Escriba el nombre del medicamento.'); d.medOtro = v.trim(); return controlIr(1); }
+    if (s.paso === 'dosis') { const x = parseNum(v); if (!(x > 0 && x <= 100)) return error('Anote la dosis en miligramos, por ejemplo 2,5.'); d.dosis = x; return controlIr(1); }
+    if (s.paso === 'codigo') {
+      if (!codigoValido(v)) return;
+      state.registros.push({ id: uid(), fecha: iso(today()), peso: d.peso, origen: 'farmacia', dosis: d.aplicada ? d.dosis : null, sitio: d.aplicada ? d.sitio : '', plumaNueva: !!(d.aplicada && d.pluma), dosisPorPluma: 4 });
+      if (d.aplicada) state.tratamiento = { med: d.med, medOtro: d.med === 'otro' ? d.medOtro : '', dosis: d.dosis };
+      save(); s.paso = 'listo'; render(); renderSheet();
+    }
+  }
+
+  function renderSheet() {
+    const s = ui.sheet; if (!s) return;
+    let h = '';
+    if (s.tipo === 'control') {
+      h = marco('Sellar mi carné', cuerpoControl());
+    } else if (s.tipo === 'peso') {
+      h = marco('Anotar mi peso', '<p class="wz-q">¿Cuánto pesó?</p><p class="wz-ayuda">En ayunas y siempre en la misma romana.</p>' +
+        '<div class="wz-num"><input id="wz-in" inputmode="decimal" autocomplete="off" aria-label="Peso en kilos" placeholder="0,0"><span>kg</span></div>' +
+        '<div id="w-fecha" hidden><label class="campo"><span>¿Qué día fue?</span><input class="inp" id="p-fecha" type="date" value="' + iso(today()) + '" max="' + iso(today()) + '"></label></div>' +
+        '<button class="enlace" id="b-fecha" data-act="peso-fecha" style="margin-top:.6rem">Fue otro día</button>' +
+        '<div id="f-error" class="error" hidden></div><div class="acciones"><button class="btn btn-p btn-g" data-act="guardar-peso">Guardar</button></div>');
+    } else if (s.tipo === 'respaldo') {
+      h = marco('Guardar una copia', '<p class="wz-ayuda">Copie este código y mándeselo a usted mismo por WhatsApp. Con él recupera sus datos en otro teléfono.</p>' +
+        '<label class="campo"><span>Su código</span><textarea class="inp" id="r-cod" readonly>' + esc(s.codigo) + '</textarea></label>' +
+        '<div class="acciones"><button class="btn btn-p btn-g" data-act="copiar-codigo">Copiar código</button></div>');
+    } else if (s.tipo === 'restaurar') {
+      h = marco('Recuperar mis datos', '<label class="campo"><span>Pegue aquí el código que guardó</span><textarea class="inp" id="r-cod"></textarea></label>' +
+        '<p class="muted" style="margin-top:.5rem">Reemplaza lo que haya en este teléfono.</p>' +
+        '<div id="f-error" class="error" hidden></div><div class="acciones"><button class="btn btn-p btn-g" data-act="restaurar-ok">Recuperar</button></div>');
+    } else if (s.tipo === 'perfil') {
+      h = marco('Mis datos', '<label class="campo"><span>Nombre</span><input class="inp" id="e-nombre" value="' + esc(state.nombre) + '"></label>' +
+        '<label class="campo"><span>Estatura en centímetros</span><input class="inp" id="e-est" inputmode="numeric" placeholder="Opcional, por ejemplo 165" value="' + esc(state.estatura || '') + '"></label>' +
+        '<div class="campo"><span>Farmacia</span><div class="opciones" id="e-marca">' + Object.keys(BRANDS).map(k =>
+          '<button class="opcion" data-act="e-marca" data-marca="' + k + '" aria-pressed="' + (state.farmacia === k) + '"><small>Farmacia</small>' + BRANDS[k] + '</button>').join('') + '</div></div>' +
+        '<div id="f-error" class="error" hidden></div><div class="acciones"><button class="btn btn-p btn-g" data-act="guardar-perfil">Guardar</button></div>');
+    } else if (s.tipo === 'confirmar') {
+      h = marco(esc(s.titulo), '<p style="margin-top:.6rem">' + esc(s.texto) + '</p>' +
+        (s.pin ? '<label class="campo"><span>Código del día</span><input class="inp" id="c-pin" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="4 números"></label><div id="f-error" class="error" hidden></div>' : '') +
+        '<div class="acciones"><button class="btn btn-s" data-act="cerrar">Cancelar</button><button class="btn btn-dd" data-act="confirmar-ok">' + esc(s.boton) + '</button></div>');
+    } else if (s.tipo === 'rutina') {
+      h = marco('Rutina guiada', cuerpoRutina());
+    }
+    $('sheet-root').innerHTML = h;
+    const campo = $('wz-in');
+    if (campo) setTimeout(() => { try { campo.focus(); } catch (e) { /* sin foco */ } }, 60);
+    else { const t = $('sheet-t'); if (t) t.focus(); }
+  }
+
+  /* ---------- Rutina guiada ---------- */
+  let reloj = null;
+  function pararReloj() { if (reloj) { clearInterval(reloj); reloj = null; } }
+  function cuerpoRutina() {
+    const r = ui.sheet;
+    if (r.fase === 'elegir') {
+      return '<p style="margin-top:.5rem">Cinco ejercicios con una silla, una pared y una botella de agua. Vaya a su ritmo y pare si algo duele.</p>' +
+        '<div class="campo"><span>¿Cuántas vueltas hoy?</span><div class="chips">' + [1, 2, 3].map(n => '<button class="chip" data-act="rutina-vueltas" data-n="' + n + '" aria-pressed="' + (r.vueltas === n) + '">' + n + (n === 1 ? ' vuelta' : ' vueltas') + '</button>').join('') + '</div></div>' +
+        '<div class="acciones"><button class="btn btn-p" data-act="rutina-empezar">Empezar</button></div>';
+    }
+    if (r.fase === 'fin') {
+      return '<p class="rut-nombre">Rutina completa</p><p class="rut-como">Quedó marcada en sus hábitos de hoy. Tome agua y, si puede, camine unos minutos para soltar.</p>' +
+        '<div class="acciones"><button class="btn btn-p" data-act="cerrar">Listo</button></div>';
+    }
+    const total = r.vueltas * RUTINA.length, hecho = (r.v - 1) * RUTINA.length + r.e;
+    let av = ''; for (let k = 0; k < total; k++) av += '<i' + (k < hecho ? ' class="h"' : '') + '></i>';
+    if (r.fase === 'descanso') {
+      return '<div class="rut-avance" aria-hidden="true">' + av + '</div><p class="rut-paso">Descanso antes de la vuelta ' + r.v + '</p>' +
+        '<p class="rut-reloj" id="r-seg" aria-live="off">' + r.seg + '</p><p class="muted" style="text-align:center">segundos</p>' +
+        '<div class="acciones"><button class="btn btn-s" data-act="rutina-saltar">Saltar descanso</button></div>';
+    }
+    const ej = RUTINA[r.e];
+    return '<div class="rut-avance" aria-hidden="true">' + av + '</div>' +
+      '<p class="rut-paso">Vuelta ' + r.v + ' de ' + r.vueltas + ', ejercicio ' + (r.e + 1) + ' de ' + RUTINA.length + '</p>' +
+      '<p class="rut-nombre">' + ej.n + '</p><span class="rut-rep">' + ej.r + '</span><p class="rut-como">' + ej.c + '</p>' +
+      (ej.seg ? '<p class="rut-reloj" id="r-seg" aria-live="off">' + (r.seg != null ? r.seg : ej.seg) + '</p>' : '') +
+      '<div class="acciones">' + (ej.seg && r.seg == null ? '<button class="btn btn-s" data-act="rutina-reloj">Iniciar ' + ej.seg + ' segundos</button>' : '') +
+      '<button class="btn btn-p" data-act="rutina-sig">Hecho, siguiente</button></div>';
+  }
+  function cuenta(desde, alTerminar) {
+    pararReloj(); ui.sheet.seg = desde;
+    reloj = setInterval(() => {
+      if (!ui.sheet || ui.sheet.tipo !== 'rutina') return pararReloj();
+      ui.sheet.seg -= 1; const el = $('r-seg'); if (el) el.textContent = Math.max(0, ui.sheet.seg);
+      if (ui.sheet.seg <= 0) { pararReloj(); if (navigator.vibrate) { try { navigator.vibrate(200); } catch (e) { /* sin vibración */ } } alTerminar(); }
+    }, 1000);
+  }
+  function rutinaSiguiente() {
+    const r = ui.sheet; pararReloj(); r.seg = null;
+    if (r.e < RUTINA.length - 1) { r.e++; r.fase = 'ejercicio'; renderSheet(); return; }
+    if (r.v < r.vueltas) { r.v++; r.e = 0; r.fase = 'descanso'; renderSheet(); cuenta(60, () => { r.fase = 'ejercicio'; r.seg = null; renderSheet(); }); return; }
+    r.fase = 'fin'; setHab(iso(today()), { fuerza: true, fuerzaTipo: 'En casa' }); render(); renderSheet();
+  }
+
+  /* ---------- Acciones ---------- */
+  function empezar() {
+    const nombre = $('o-nombre').value.trim();
+    if (!ui.onb) return error('Toque el nombre de su farmacia.');
+    if (!nombre) return error('Escriba su nombre.');
+    state = normalizar({ v: 1, farmacia: ui.onb, nombre, estatura: null, creado: iso(today()), tratamiento: null, registros: [], habitos: {}, sintomas: {} });
+    save(); ui.tab = 'inicio'; render(); window.scrollTo(0, 0);
+  }
+  function guardarPeso() {
+    const fecha = $('w-fecha').hidden ? iso(today()) : $('p-fecha').value, peso = parseNum($('wz-in').value);
+    if (!(peso >= 25 && peso <= 350)) return error('Anote su peso en kilos, por ejemplo 82,4.');
+    if (!fecha || fecha > iso(today())) return error('Revise la fecha.');
+    state.registros.push({ id: uid(), fecha, peso: Math.round(peso * 10) / 10, origen: 'casa' });
+    save(); cerrarSheet(); render(); toast('Peso guardado');
+  }
+  function codigoRespaldo() { return btoa(unescape(encodeURIComponent(JSON.stringify(state)))); }
+  function restaurar() {
+    let d = null;
+    try { d = JSON.parse(decodeURIComponent(escape(atob($('r-cod').value.replace(/\s+/g, ''))))); } catch (e) { d = null; }
+    if (!valido(d)) return error('Ese código no sirve. Cópielo completo y vuelva a pegarlo.');
+    state = normalizar(d); save(); cerrarSheet(); ui.tab = 'inicio'; render(); window.scrollTo(0, 0); toast('Datos recuperados');
+  }
+  function copiarDe(id, okMsg) {
+    const ta = $(id); if (!ta) return;
+    const manual = () => { ta.focus(); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; } toast(ok ? okMsg : 'Mantenga presionado el texto para copiarlo.'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(() => toast(okMsg), manual); else manual();
+  }
+  let toastT = null;
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600); }
+
+  document.addEventListener('click', ev => {
+    const el = ev.target.closest('[data-act]'); if (!el) return;
+    const act = el.getAttribute('data-act'), hoy = iso(today());
+    if (act === 'fondo') { if (ev.target === el && ui.sheet && ['rutina', 'control'].indexOf(ui.sheet.tipo) < 0) cerrarSheet(); return; }
+    switch (act) {
+      case 'onb-marca': ui.onb = el.getAttribute('data-marca'); document.documentElement.setAttribute('data-brand', ui.onb);
+        el.parentNode.querySelectorAll('.opcion').forEach(o => o.setAttribute('aria-pressed', String(o === el))); { const e = $('f-error'); if (e) e.hidden = true; } break;
+      case 'onb-empezar': empezar(); break;
+      case 'tab': ui.tab = el.getAttribute('data-tab'); render(); window.scrollTo(0, 0); break;
+      case 'seg': ui.seg = el.getAttribute('data-seg'); render(); break;
+      case 'agua-mas': { const h = hab(hoy); if (h.agua < VASOS) { setHab(hoy, { agua: h.agua + 1 }); render(); if (h.agua + 1 === VASOS) toast('Meta de agua cumplida'); } break; }
+      case 'agua-menos': { const h = hab(hoy); if (h.agua > 0) { setHab(hoy, { agua: h.agua - 1 }); render(); } break; }
+      case 'hab': { const k = el.getAttribute('data-k'), h = hab(hoy), c = {}; c[k] = !h[k]; if (k === 'fuerza' && h.fuerza) c.fuerzaTipo = ''; setHab(hoy, c); render(); break; }
+      case 'tipo': { const v = el.getAttribute('data-v'), h = hab(hoy); setHab(hoy, { fuerza: true, fuerzaTipo: h.fuerzaTipo === v ? '' : v }); render(); break; }
+      case 'siento': {
+        if (el.getAttribute('data-v') === 'bien') { const ya = (state.sintomas[hoy] || []).indexOf('Me siento bien') >= 0; state.sintomas[hoy] = ya ? [] : ['Me siento bien']; ui.molestias = false; }
+        else { const mol = (state.sintomas[hoy] || []).filter(x => x !== 'Me siento bien'); state.sintomas[hoy] = mol; ui.molestias = mol.length ? true : !ui.molestias; }
+        save(); render(); break;
+      }
+      case 'sintoma': {
+        const v = el.getAttribute('data-v'); let sel = (state.sintomas[hoy] || []).filter(x => x !== 'Me siento bien');
+        sel = sel.indexOf(v) >= 0 ? sel.filter(x => x !== v) : sel.concat(v);
+        state.sintomas[hoy] = sel; ui.molestias = true; save(); render(); break;
+      }
+      case 'peso-nuevo': abrirSheet({ tipo: 'peso' }); break;
+      case 'peso-fecha': $('w-fecha').hidden = false; el.hidden = true; break;
+      case 'guardar-peso': guardarPeso(); break;
+      case 'borrar-reg': {
+        const id = el.getAttribute('data-id'), reg = state.registros.find(r => r.id === id); if (!reg) break;
+        confirmar({ titulo: 'Quitar esta pesada', texto: reg.origen === 'farmacia' ? 'Es un control sellado. Para quitarlo pida el código del día en la farmacia.' : 'Se borra esta pesada. No se puede deshacer.',
+          boton: 'Quitar', pin: reg.origen === 'farmacia', ok: () => { state.registros = state.registros.filter(r => r.id !== id); save(); render(); toast('Pesada quitada'); } }); break;
+      }
+      case 'control-abrir': abrirControl(); break;
+      case 'control-atras': controlIr(-1); break;
+      case 'control-op': controlOpcion(el.getAttribute('data-campo'), el.getAttribute('data-v')); break;
+      case 'control-otra': ui.sheet.d.otra = true; ui.sheet.d.dosis = null; renderSheet(); break;
+      case 'control-ok': controlOk(); break;
+      case 'control-fin': cerrarSheet(); ui.tab = 'carne'; ui.selloNuevo = true; render(); window.scrollTo(0, 0); break;
+      case 'respaldo': abrirSheet({ tipo: 'respaldo', codigo: codigoRespaldo() }); break;
+      case 'copiar-codigo': copiarDe('r-cod', 'Código copiado'); break;
+      case 'restaurar-abrir': abrirSheet({ tipo: 'restaurar' }); break;
+      case 'restaurar-ok': restaurar(); break;
+      case 'perfil': abrirSheet({ tipo: 'perfil' }); break;
+      case 'e-marca': el.parentNode.querySelectorAll('.opcion').forEach(o => o.setAttribute('aria-pressed', String(o === el))); break;
+      case 'guardar-perfil': {
+        const nombre = $('e-nombre').value.trim(), estTxt = $('e-est').value.trim(), est = estTxt ? parseNum(estTxt) : null;
+        if (!nombre) { error('Escriba su nombre.'); break; }
+        if (est !== null && !(est >= 100 && est <= 230)) { error('La estatura va en centímetros, por ejemplo 165.'); break; }
+        const m = document.querySelector('#e-marca [aria-pressed="true"]');
+        state.nombre = nombre; state.estatura = est; if (m) state.farmacia = m.getAttribute('data-marca');
+        save(); cerrarSheet(); render(); toast('Datos guardados'); break;
+      }
+      case 'borrar-todo': confirmar({ titulo: 'Borrar todos mis datos', texto: 'Se borran su carné, sus pesadas y sus hábitos de este teléfono. No se puede deshacer.', boton: 'Borrar todo',
+        ok: () => { try { localStorage.removeItem(KEY); } catch (e) { /* sin almacenamiento */ } state = null; ui.onb = null; ui.tab = 'inicio'; render(); window.scrollTo(0, 0); } }); break;
+      case 'confirmar-ok': { const s = ui.sheet; if (!s) break; if (s.pin && !codigoValido($('c-pin').value)) break; cerrarSheet(); if (s.ok) s.ok(); break; }
+      case 'cerrar': { const eraListo = ui.sheet && ui.sheet.tipo === 'control' && ui.sheet.paso === 'listo'; cerrarSheet(); if (eraListo) { ui.tab = 'carne'; ui.selloNuevo = true; render(); window.scrollTo(0, 0); } break; }
+      case 'rutina-abrir': abrirSheet({ tipo: 'rutina', fase: 'elegir', vueltas: 2, v: 1, e: 0, seg: null }); break;
+      case 'rutina-vueltas': ui.sheet.vueltas = parseInt(el.getAttribute('data-n'), 10); renderSheet(); break;
+      case 'rutina-empezar': ui.sheet.fase = 'ejercicio'; renderSheet(); break;
+      case 'rutina-reloj': { const ej = RUTINA[ui.sheet.e]; ui.sheet.seg = ej.seg; renderSheet(); cuenta(ej.seg, () => toast('Tiempo cumplido')); break; }
+      case 'rutina-sig': rutinaSiguiente(); break;
+      case 'rutina-saltar': pararReloj(); ui.sheet.fase = 'ejercicio'; ui.sheet.seg = null; renderSheet(); break;
+    }
+  });
+  document.addEventListener('input', () => { const err = $('f-error'); if (err && !err.hidden) err.hidden = true; });
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && ui.sheet) return cerrarSheet();
+    if (ev.key === 'Enter' && ev.target && ev.target.id === 'wz-in' && ui.sheet) { ev.preventDefault(); if (ui.sheet.tipo === 'control') controlOk(); else if (ui.sheet.tipo === 'peso') guardarPeso(); }
+    if (ev.key === 'Enter' && ev.target && ev.target.id === 'o-nombre') { ev.preventDefault(); empezar(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

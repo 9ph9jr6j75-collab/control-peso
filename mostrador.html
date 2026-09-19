@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="es" data-brand="gil">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control de peso, Farmacia Gil Solano y Farmacia Caribe</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1B6B54">
+<meta name="apple-mobile-web-app-title" content="Mostrador">
+<link rel="manifest" href="manifest-mostrador.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-mostrador-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-mostrador.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F3; --surface:#FFFFFF; --ink:#14261F; --ink-2:#4A5E56; --line:#D3DCD7;
+  --warn:#7A4F00; --warn-soft:#FBEFD0; --alert:#A3301E; --alert-soft:#FADED8;
+  --brand:#1B6B54; --brand-fg:#FFFFFF; --brand-soft:#DFF0E9; --brand-ink:#14503F;
+  --tile:#1B6B54; --tile-fg:#FFFFFF;
+  --shadow:0 -12px 40px rgba(12,24,20,.28);
+  --f-display:"Bricolage Grotesque","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --f-text:"Atkinson Hyperlegible","Segoe UI",Roboto,system-ui,sans-serif;
+}
+:root[data-brand="caribe"]{ --brand:#0F6C8F; --brand-soft:#DDEEF6; --brand-ink:#0B516C; --tile:#0F6C8F; }
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1815; --surface:#16231F; --ink:#E7EFEB; --ink-2:#9EB1A9; --line:#2B3C36;
+    --warn:#F2C76E; --warn-soft:#3A2E12; --alert:#F3A091; --alert-soft:#40201A;
+    --brand:#62C9A9; --brand-fg:#0B1512; --brand-soft:#17342C; --brand-ink:#8ADCC2;
+    --shadow:0 -12px 40px rgba(0,0,0,.55);
+  }
+  :root:not([data-theme="light"])[data-brand="caribe"]{ --brand:#6CC3E6; --brand-soft:#14303D; --brand-ink:#97D6F0; }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1815; --surface:#16231F; --ink:#E7EFEB; --ink-2:#9EB1A9; --line:#2B3C36;
+  --warn:#F2C76E; --warn-soft:#3A2E12; --alert:#F3A091; --alert-soft:#40201A;
+  --brand:#62C9A9; --brand-fg:#0B1512; --brand-soft:#17342C; --brand-ink:#8ADCC2;
+  --shadow:0 -12px 40px rgba(0,0,0,.55);
+}
+:root[data-theme="dark"][data-brand="caribe"]{ --brand:#6CC3E6; --brand-soft:#14303D; --brand-ink:#97D6F0; }
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-text);font-size:1rem;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p,ul,ol{margin:0;padding:0}
+ul,ol{list-style:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none !important}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+
+.shell{max-width:30rem;margin:0 auto;min-height:100vh;min-height:100dvh;padding-bottom:calc(5.5rem + env(safe-area-inset-bottom))}
+
+/* Barra superior */
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;background:var(--bg);border-bottom:1px solid var(--line)}
+.tile{width:2.75rem;height:2.75rem;border-radius:.8rem;background:var(--tile);display:grid;place-items:center;flex:none}
+.tile svg{width:2rem;height:2rem;display:block}
+.wordmark{flex:1;min-width:0;line-height:1.1}
+.wordmark small{display:block;font-size:.8125rem;color:var(--ink-2)}
+.wordmark strong{display:block;font-family:var(--f-display);font-size:1.4rem;font-weight:700;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Pestañas */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabs-in{display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:30rem}
+.tab{position:relative;background:none;border:0;padding:.6rem .25rem .55rem;display:grid;justify-items:center;gap:.1rem;font-size:.8125rem;color:var(--ink-2);min-height:3.6rem}
+.tab svg{width:1.5rem;height:1.5rem}
+.tab[aria-current="page"]{color:var(--brand-ink);font-weight:700}
+.tab[aria-current="page"]::before{content:"";position:absolute;top:-1px;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--brand)}
+
+/* Contenido */
+.view{padding:1.1rem 1rem 0}
+.fecha{color:var(--ink-2);font-size:.9375rem}
+.fecha::first-letter{text-transform:uppercase}
+.titular{font-family:var(--f-display);font-weight:700;font-size:2rem;line-height:1.06;letter-spacing:-.025em;margin:.2rem 0 .45rem}
+.bajada{color:var(--ink-2)}
+.bajada b{color:var(--alert)}
+.h-vista{font-family:var(--f-display);font-weight:700;font-size:1.6rem;letter-spacing:-.02em;line-height:1.1}
+.muted{color:var(--ink-2);font-size:.9375rem}
+
+.grupo{margin-top:1.6rem}
+.grupo > h2{font-family:var(--f-display);font-size:1.0625rem;font-weight:600;margin-bottom:.45rem}
+.lista{background:var(--surface);border:1px solid var(--line);border-radius:.9rem;overflow:hidden}
+.fila{display:flex;align-items:center;gap:.6rem;padding:.75rem .85rem .75rem .7rem;border-left:.3rem solid var(--line)}
+.fila + .fila{border-top:1px solid var(--line)}
+.fila[data-estado="hoy"]{border-left-color:var(--brand)}
+.fila[data-estado="atrasado"]{border-left-color:var(--alert)}
+.fila[data-estado="pausa"]{opacity:.65}
+.fila-main{flex:1;min-width:0;display:grid;gap:.1rem;text-align:left;background:none;border:0;padding:.1rem 0;min-height:2.75rem}
+.fila-nombre{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fila-det,.fila-cuando{color:var(--ink-2);font-size:.9375rem}
+.fila-cuando::first-letter,.cap::first-letter{text-transform:uppercase}
+.fila[data-estado="atrasado"] .fila-cuando{color:var(--alert);font-weight:700}
+.fila[data-estado="hoy"] .fila-cuando{color:var(--brand-ink);font-weight:700}
+.tag{font-style:normal;font-weight:400;font-size:.8125rem;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:.05rem .45rem;margin-left:.3rem}
+
+.aviso{margin-top:1rem;padding:.7rem .85rem;border-radius:.7rem;background:var(--brand-soft);color:var(--brand-ink);font-size:.9375rem;display:flex;gap:.6rem;align-items:center;justify-content:space-between}
+.aviso-alert{background:var(--alert-soft);color:var(--alert)}
+.vacio{margin-top:1.4rem;padding:1.2rem 1rem;border:1px dashed var(--ink-2);border-radius:.9rem;text-align:left}
+.vacio p{margin-bottom:.9rem}
+.resumen{margin-top:1.6rem;padding-top:.9rem;border-top:1px solid var(--line);color:var(--ink-2)}
+
+/* Botones */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:2.85rem;padding:.55rem 1.05rem;border-radius:.7rem;border:1px solid transparent;font-weight:700;text-decoration:none;text-align:center}
+.btn-p{background:var(--brand);color:var(--brand-fg)}
+.btn-s{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.btn-t{background:none;color:var(--brand-ink);padding-inline:.4rem}
+.btn-d{background:none;color:var(--alert);padding-inline:.4rem}
+.btn-dd{background:var(--alert);color:#fff}
+.btn-block{width:100%}
+.btn-sm{min-height:2.5rem;padding:.35rem .85rem;font-size:.9375rem}
+.acciones{display:flex;gap:.6rem;margin-top:1rem}
+.acciones .btn{flex:1}
+
+/* Buscador y campos */
+.inp{width:100%;min-height:2.95rem;padding:.55rem .75rem;border:1px solid var(--line);border-radius:.6rem;background:var(--bg)}
+textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
+.view > .inp{background:var(--surface)}
+.campo{display:block;margin-top:.95rem}
+.campo > span{display:block;font-size:.9375rem;font-weight:700;margin-bottom:.3rem}
+.campo small{display:block;color:var(--ink-2);font-size:.875rem;margin-top:.3rem}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;align-items:end}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{min-height:2.5rem;padding:.3rem .85rem;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.chip[aria-pressed="true"]{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-ink);font-weight:700}
+.check{display:flex;gap:.65rem;align-items:flex-start;margin-top:.95rem}
+.check input{width:1.4rem;height:1.4rem;margin:.05rem 0 0;flex:none;accent-color:var(--brand)}
+.error{margin-top:.95rem;padding:.6rem .75rem;border-radius:.6rem;background:var(--alert-soft);color:var(--alert);font-weight:700}
+
+/* Ficha del cliente */
+.volver{background:none;border:0;padding:.4rem .4rem .4rem 0;color:var(--brand-ink);font-weight:700;min-height:2.75rem}
+.nombre{font-family:var(--f-display);font-size:1.7rem;font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.receta{margin-top:.8rem;padding:.75rem .9rem;border:1.5px dashed var(--ink-2);border-radius:.5rem;background:var(--surface)}
+.receta strong{display:block}
+.receta span{display:block;color:var(--ink-2);font-size:.9375rem}
+.receta em{display:block;margin-top:.45rem;padding-top:.45rem;border-top:1px solid var(--line);font-style:normal;font-size:.9375rem}
+.peso{margin-top:1.4rem}
+.peso-act{display:flex;align-items:baseline;gap:.4rem;font-family:var(--f-display)}
+.peso-act b{font-size:3.2rem;font-weight:700;letter-spacing:-.035em;line-height:1}
+.peso-act span{font-size:1.2rem;font-weight:600;color:var(--ink-2)}
+.cambio{margin-top:.25rem}
+.cambio b{color:var(--brand-ink)}
+.chart{display:block;width:100%;height:auto;margin-top:.7rem}
+.chart .eje{stroke:var(--line);stroke-width:1}
+.chart .linea{fill:none;stroke:var(--brand);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .area{fill:var(--brand-soft)}
+.chart .pto{fill:var(--surface);stroke:var(--brand);stroke-width:2.5}
+.chart text{fill:var(--ink-2);font-size:11px;font-family:var(--f-text)}
+.bloque{margin-top:1.5rem}
+.bloque > h2{font-family:var(--f-display);font-size:1.0625rem;font-weight:600;margin-bottom:.45rem}
+.pluma{display:flex;align-items:center;gap:.22rem;max-width:17rem}
+.pluma::before{content:"";width:1.7rem;height:1.15rem;border-radius:.6rem 0 0 .6rem;background:var(--ink-2);flex:none}
+.pluma::after{content:"";width:0;height:0;border-block:.34rem solid transparent;border-left:.95rem solid var(--ink-2);flex:none}
+.pluma i{display:block;height:1.15rem;flex:1;border-radius:.2rem;background:var(--line)}
+.pluma i.q{background:var(--brand)}
+.pluma-txt{margin-top:.35rem}
+.sellos-f{display:flex;gap:.55rem}
+.sellos-f i{width:2.7rem;height:2.7rem;border-radius:50%;border:2px dashed var(--ink-2);display:grid;place-items:center;font-style:normal;font-weight:700;color:var(--ink-2)}
+.sellos-f i.s{background:var(--tile);border:0;transform:rotate(-8deg)}
+.sellos-f i.s svg{width:70%;height:70%}
+.nota{margin-top:.7rem;padding:.65rem .8rem;border-radius:.6rem;font-size:.9375rem}
+.nota-warn{background:var(--warn-soft);color:var(--warn)}
+.nota-alert{background:var(--alert-soft);color:var(--alert)}
+.nota-info{background:var(--brand-soft);color:var(--brand-ink)}
+.visita{padding:.75rem .9rem;display:grid;grid-template-columns:1fr auto;gap:.1rem .75rem;align-items:start}
+.visita + .visita{border-top:1px solid var(--line)}
+.visita .v-fecha{font-weight:700}
+.visita .v-peso{font-family:var(--f-display);font-weight:600;font-size:1.0625rem;text-align:right}
+.visita .v-det{color:var(--ink-2);font-size:.9375rem}
+.visita .v-del{justify-self:end;background:none;border:0;padding:.35rem 0 .35rem .5rem;min-height:2.2rem;color:var(--ink-2);font-size:.875rem;text-decoration:underline}
+
+/* Guía */
+.guia-cab{display:flex;align-items:center;gap:.8rem;padding:1rem;border-radius:.9rem;background:var(--tile);color:var(--tile-fg)}
+.guia-cab .tile{background:none;width:3rem;height:3rem}
+.guia-cab .tile svg{width:3rem;height:3rem}
+.guia-cab small{display:block;font-size:.875rem;opacity:.85}
+.guia-cab strong{display:block;font-family:var(--f-display);font-size:1.5rem;line-height:1.1;letter-spacing:-.015em}
+.guia-intro{margin-top:1rem;padding:.85rem 1rem;border-left:.3rem solid var(--brand);background:var(--surface);border-radius:0 .6rem .6rem 0}
+.guia h2{font-family:var(--f-display);font-size:1.3rem;font-weight:700;letter-spacing:-.015em;margin:1.7rem 0 .55rem}
+.guia h3{font-size:1rem;font-weight:700;margin:1rem 0 .4rem}
+.puntos li{position:relative;padding-left:1.15rem;margin-top:.5rem;max-width:34rem}
+.puntos li::before{content:"";position:absolute;left:.1rem;top:.58em;width:.45rem;height:.45rem;border-radius:50%;background:var(--brand)}
+.puntos-alerta li::before{background:var(--alert)}
+.rutina{background:var(--surface);border:1px solid var(--line);border-radius:.9rem;margin-top:.6rem;overflow:hidden}
+.rutina li{display:flex;justify-content:space-between;gap:1rem;padding:.65rem .9rem}
+.rutina li + li{border-top:1px solid var(--line)}
+.rutina li span:last-child{color:var(--ink-2);white-space:nowrap}
+.codigo{margin-top:1rem;display:flex;align-items:center;gap:.9rem;padding:.7rem .9rem;border:1.5px dashed var(--ink-2);border-radius:.6rem;background:var(--surface)}
+.codigo b{font-family:var(--f-display);font-size:2rem;font-weight:700;letter-spacing:.1em;line-height:1;font-variant-numeric:tabular-nums}
+.codigo span{flex:1;font-size:.9375rem;color:var(--ink-2)}
+.qr{margin-top:.6rem;padding:1rem;border:1px solid var(--line);border-radius:.9rem;background:var(--surface);display:grid;grid-template-columns:8.5rem 1fr;gap:1rem;align-items:center}
+.qr svg{width:100%;height:auto;display:block;border-radius:.3rem}
+.qr p{font-size:.9375rem}
+.pie{margin-top:1.6rem;padding-top:.9rem;border-top:1px solid var(--line);color:var(--ink-2);font-size:.9375rem}
+
+/* Ajustes */
+.opciones{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.opcion{min-height:3.2rem;border-radius:.7rem;border:1px solid var(--line);background:var(--surface);font-weight:700}
+.opcion[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-ink)}
+.pila{display:grid;gap:.55rem}
+
+/* Hoja inferior */
+.backdrop{position:fixed;inset:0;z-index:20;background:rgba(8,16,13,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:30rem;max-height:92vh;max-height:92dvh;overflow:auto;background:var(--surface);border-radius:1.25rem 1.25rem 0 0;padding:1rem 1rem calc(1.25rem + env(safe-area-inset-bottom));box-shadow:var(--shadow);animation:sube .22s ease-out}
+.sheet-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
+.sheet-cab h2{font-family:var(--f-display);font-size:1.35rem;font-weight:700;letter-spacing:-.015em;line-height:1.15;padding-top:.3rem}
+.sheet-cab h2:focus{outline:none}
+.cerrar{background:none;border:0;width:2.75rem;height:2.75rem;border-radius:50%;display:grid;place-items:center;flex:none;margin:-.3rem -.4rem 0 0}
+.cerrar svg{width:1.4rem;height:1.4rem}
+@keyframes sube{from{transform:translateY(2rem);opacity:0}to{transform:none;opacity:1}}
+
+.toast{position:fixed;left:50%;top:calc(4.5rem + env(safe-area-inset-top));transform:translateX(-50%);z-index:30;max-width:calc(100% - 2rem);padding:.65rem 1rem;border-radius:.7rem;background:var(--ink);color:var(--bg);font-weight:700;font-size:.9375rem;text-align:center}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+</style>
+</head>
+<body>
+<div class="shell" id="app"></div>
+<div id="sheet-root"></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<noscript><p style="padding:1rem">Esta app necesita JavaScript activado.</p></noscript>
+
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Constantes ---------- */
+  const KEY = 'controlpeso.farmacias.v1';
+  /* Enlace de la app del cliente (se puede cambiar en Ajustes). Dentro de Claude es el artefacto publicado;
+     en un sitio propio, por ejemplo GitHub Pages, es la carpeta donde vive esta misma página. */
+  const APP_CLIENTE = (window.claude && typeof window.claude.use === 'function')
+    ? 'https://claude.ai/artifact/Gg7UEBYCTeQ3LmEQBmuLRY'
+    : (function () { try { return new URL('./', location.href).href; } catch (e) { return ''; } })();
+  const SEMILLA = 'mortero-gs-caribe';                                       /* debe ser igual en la app del cliente */
+  function codigoDelDia(fecha) {
+    let x = 0x811c9dc5; const t = SEMILLA + '|' + fecha;
+    for (let r = 0; r < 600; r++) {
+      for (let i = 0; i < t.length; i++) { x ^= t.charCodeAt(i); x = Math.imul(x, 0x01000193) >>> 0; }
+      x ^= r; x = Math.imul(x, 0x01000193) >>> 0;
+    }
+    return String(x % 10000).padStart(4, '0');
+  }
+  const BRANDS = { gil: 'Gil Solano', caribe: 'Caribe' };
+  const RGB = { gil: [27, 107, 84], caribe: [15, 108, 143] };
+  const MEDS = {
+    mounjaro: { nombre: 'Mounjaro (tirzepatida)', corto: 'Mounjaro', inicio: 2.5, gracia: 4, dosis: [2.5, 5, 7.5, 10, 12.5, 15] },
+    ozempic: { nombre: 'Ozempic (semaglutida)', corto: 'Ozempic', inicio: 0.25, gracia: 5, dosis: [0.25, 0.5, 1, 2] },
+    otro: { nombre: 'Otro medicamento', corto: 'Otro', inicio: null, gracia: null, dosis: [] }
+  };
+  const SITIOS = ['Abdomen', 'Muslo', 'Brazo'];
+  const MOLESTIAS = ['Náusea', 'Vómito', 'Diarrea', 'Estreñimiento', 'Acidez'];
+  const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
+  const MESES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
+
+  const LOGO = '<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">' +
+    '<path d="M45 8 31 34" stroke="var(--tile-fg)" stroke-width="6.5" stroke-linecap="round"/>' +
+    '<rect x="8" y="29" width="48" height="8" rx="4" fill="var(--tile-fg)" stroke="var(--tile)" stroke-width="2.5"/>' +
+    '<path d="M13 37c0 11 6 18 14 18h10c8 0 14-7 14-18Z" fill="var(--tile-fg)"/>' +
+    '<rect x="22" y="54" width="20" height="5" rx="2.5" fill="var(--tile-fg)"/>' +
+    '<path d="M32 40.5v10M27 45.5h10" stroke="var(--tile)" stroke-width="3.2" stroke-linecap="round"/></svg>';
+
+  const ICONOS = {
+    hoy: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.7" fill="currentColor" stroke="none"/>',
+    clientes: '<circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.6-3.4 3-5.2 6-5.2s5.4 1.8 6 5.2M16 5.6a3.2 3.2 0 0 1 0 5.8M17.6 14.6c1.9.7 3 2.4 3.4 4.9"/>',
+    guia: '<path d="M6 3.5h8.5L19 8v12.5H6z"/><path d="M14 3.5V8h5M9 12.5h7M9 16h5"/>',
+    ajustes: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'
+  };
+
+  /* ---------- Guía: un solo contenido para pantalla y PDF ---------- */
+  const GUIA = {
+    intro: 'Esta guía acompaña el tratamiento que le indicó su médico. La farmacia aplica la dosis de su receta, lleva el control de su peso y le da recomendaciones generales. No sustituye la consulta: cualquier cambio de dosis, o la decisión de suspender el tratamiento, le corresponde a su médico.',
+    comer: [
+      'Sirva porciones pequeñas y coma despacio. El medicamento hace que el estómago se vacíe más lento, y llenarse de más provoca náusea.',
+      'Incluya proteína en cada comida: huevo, pollo, pescado, frijoles, queso tierno o yogur natural. Ayuda a conservar el músculo mientras baja de peso.',
+      'Llene la mitad del plato con vegetales. El arroz, las pastas, las tortillas y las verduras harinosas (yuca, plátano, papa) caben en una cuarta parte.',
+      'Tome agua durante el día, de 6 a 8 vasos. Deje las gaseosas y los jugos azucarados. El licor también suma calorías y empeora la náusea.',
+      'Evite frituras y comidas muy grasosas o condimentadas, sobre todo los dos días después de la inyección.',
+      'Si hay estreñimiento, aumente la fibra (avena, frutas con cáscara, vegetales) y el agua.',
+      'No se salte comidas aunque tenga poco apetito.'
+    ],
+    caminar: 'Camine 30 minutos al día, cinco días por semana. Si no tiene costumbre, empiece con 10 minutos y suba un poco cada semana.',
+    fuerza: 'Si ya va al gimnasio o hace pilates, yoga u otra actividad, siga con eso. Si no tiene rutina, esta es una base para hacer en casa tres días por semana: dos o tres vueltas, con un minuto de descanso entre una y otra.',
+    rutina: [
+      ['Sentadilla hasta tocar una silla', '12 repeticiones'],
+      ['Flexiones contra la pared', '10 repeticiones'],
+      ['Puente de glúteos en el piso', '12 repeticiones'],
+      ['Remo con una botella de agua', '10 por brazo'],
+      ['Plancha apoyando las rodillas', '20 segundos']
+    ],
+    ejercicioNotas: [
+      'Cualquiera que sea su actividad, incluya algo de fuerza: al bajar de peso también se pierde músculo si no se usa.',
+      'Si tiene problemas de rodilla, de espalda o del corazón, consulte a su médico antes de empezar.'
+    ],
+    alarma: [
+      'Dolor fuerte y persistente en el abdomen, con o sin vómito.',
+      'Vómito o diarrea que no cede, o no logra tomar líquidos.',
+      'Dolor bajo las costillas del lado derecho, fiebre, o piel y ojos amarillos.',
+      'Hinchazón de cara, labios o garganta, o dificultad para respirar.',
+      'Si usa insulina o pastillas para la diabetes: sudoración, temblor o confusión pueden ser azúcar baja.'
+    ],
+    avise: [
+      'Está embarazada, sospecha embarazo o planea embarazarse.',
+      'Usa pastillas anticonceptivas. Con tirzepatida puede hacer falta un método adicional durante las primeras cuatro semanas y después de cada aumento de dosis.',
+      'Tiene programada una cirugía o un procedimiento con sedación.',
+      'Nota un bulto en el cuello, ronquera que no se quita o dificultad para tragar.'
+    ],
+    pie: 'Información general para personas en tratamiento indicado por su médico. No sustituye la consulta médica ni la información del inserto del medicamento.'
+  };
+
+  /* ---------- Utilidades ---------- */
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const pad = n => String(n).padStart(2, '0');
+  const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const parse = s => { const a = String(s).split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); };
+  const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+  const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return iso(d); };
+  const diffDays = (a, b) => Math.round((parse(a) - parse(b)) / 86400000);
+  const fechaLarga = s => { const d = parse(s); return DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()]; };
+  const fechaCorta = s => { const d = parse(s); return d.getDate() + ' ' + MESES_C[d.getMonth()] + (d.getFullYear() !== today().getFullYear() ? ' ' + d.getFullYear() : ''); };
+  const num = (n, dec) => Number(n).toLocaleString('es-CR', { minimumFractionDigits: dec == null ? 1 : dec, maximumFractionDigits: dec == null ? 1 : dec });
+  const dosisTxt = n => Number(n).toLocaleString('es-CR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const parseNum = s => { const v = parseFloat(String(s == null ? '' : s).trim().replace(',', '.')); return isFinite(v) ? v : NaN; };
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const $ = id => document.getElementById(id);
+  const medNombre = c => c.med === 'otro' && c.medOtro ? c.medOtro : MEDS[c.med].nombre;
+  const medCorto = c => c.med === 'otro' && c.medOtro ? c.medOtro : MEDS[c.med].corto;
+
+  /* ---------- Estado y almacenamiento ---------- */
+  let storageOK = true;
+  function load() {
+    let raw = null;
+    try { raw = localStorage.getItem(KEY); } catch (e) { storageOK = false; return null; }
+    if (!raw) return null;
+    try { const d = JSON.parse(raw); if (valido(d)) return d; } catch (e) { /* datos dañados: se empieza de nuevo */ }
+    return null;
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); storageOK = true; } catch (e) { storageOK = false; }
+  }
+  function valido(d) {
+    return !!(d && d.ajustes && Array.isArray(d.clientes) && BRANDS[d.ajustes.farmacia] &&
+      d.clientes.every(c => c && typeof c.nombre === 'string' && Array.isArray(c.visitas) && MEDS[c.med] && BRANDS[c.farmacia]));
+  }
+  function ajustesBase() {
+    return { farmacia: 'gil', tel: { gil: '', caribe: '' }, urlCliente: APP_CLIENTE };
+  }
+  function ejemplos() {
+    const t = iso(today());
+    const mk = (farmacia, nombre, tel, estatura, med, medico, serie) => {
+      let k = 0;
+      const visitas = serie.map(s => ({
+        id: uid(), fecha: addDays(t, -s[0]), peso: s[1], aplicada: true, dosis: s[2],
+        sitio: SITIOS[(k++) % 3], plumaNueva: !!s[3], molestias: s[4] || [], nota: ''
+      }));
+      return {
+        id: uid(), farmacia, nombre, tel, estatura, med, medOtro: '', dosis: serie[serie.length - 1][2], medico,
+        dosisPorPluma: 4, activo: true, demo: true, creado: addDays(t, -serie[0][0]), visitas
+      };
+    };
+    return [
+      mk('gil', 'Marta R.', '8888-0001', 160, 'mounjaro', 'Dra. Ejemplo', [[28, 86.0, 2.5, 1], [21, 85.2, 2.5, 0, ['Náusea']], [14, 84.1, 2.5], [7, 83.3, 2.5]]),
+      mk('gil', 'Carlos M.', '8888-0002', 174, 'ozempic', 'Dr. Ejemplo', [[65, 104.5, 0.25, 1], [58, 103.8, 0.25], [51, 103.0, 0.25, 0, ['Acidez']], [44, 102.1, 0.25], [37, 101.4, 0.5, 1], [30, 100.2, 0.5, 0, ['Náusea']], [23, 99.6, 0.5], [16, 98.9, 0.5], [9, 98.3, 0.5, 1]]),
+      mk('gil', 'Ana Lucía V.', '8888-0003', 162, 'mounjaro', 'Dra. Ejemplo', [[39, 78.0, 2.5, 1], [32, 77.1, 2.5], [25, 76.4, 2.5, 0, ['Estreñimiento']], [18, 75.5, 2.5], [11, 74.6, 5, 1, ['Náusea']], [4, 73.8, 5]]),
+      mk('caribe', 'José P.', '8888-0004', 170, 'ozempic', 'Dr. Ejemplo', [[13, 95.4, 0.25, 1], [6, 94.9, 0.25]]),
+      mk('caribe', 'Ruth B.', '8888-0005', 158, 'mounjaro', 'Dra. Ejemplo', [[7, 71.2, 2.5, 1]])
+    ];
+  }
+
+  let state = load();
+  if (!state) { state = { v: 1, ajustes: ajustesBase(), clientes: ejemplos() }; save(); }
+  if (!state.ajustes.tel) state.ajustes.tel = { gil: '', caribe: '' };
+  if (state.ajustes.urlCliente == null) state.ajustes.urlCliente = APP_CLIENTE;
+
+  const ui = { tab: 'hoy', clienteId: null, buscar: '', sheet: null };
+  let downloads = null;
+  const enClaude = !!(window.claude && typeof window.claude.use === 'function');
+  const puedeDescargar = () => !!downloads || !enClaude;   /* fuera de Claude se usa la descarga normal del navegador */
+
+  /* ---------- Cálculos por cliente ---------- */
+  function info(c) {
+    const vs = c.visitas.slice().sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
+    const pes = vs.filter(v => v.peso > 0);
+    const ini = pes.length ? pes[0].peso : null;
+    const act = pes.length ? pes[pes.length - 1].peso : null;
+    const apl = vs.filter(v => v.aplicada);
+    const ult = apl.length ? apl[apl.length - 1] : null;
+    const hoy = iso(today());
+    const prox = ult ? addDays(ult.fecha, 7) : hoy;
+    const dias = diffDays(prox, hoy);
+    let rest = null;
+    apl.forEach(v => { if (v.plumaNueva || rest === null || rest <= 0) rest = c.dosisPorPluma; rest -= 1; });
+    let sem = 0;
+    if (ult) { for (let k = apl.length - 1; k >= 0 && apl[k].dosis === ult.dosis; k--) sem++; }
+    const cambio = (ini != null && act != null) ? act - ini : 0;
+    const pct = ini ? cambio / ini * 100 : 0;
+    const imc = (act && c.estatura) ? act / Math.pow(c.estatura / 100, 2) : null;
+    const estado = !c.activo ? 'pausa' : dias < 0 ? 'atrasado' : dias === 0 ? 'hoy' : 'proximo';
+    let cuando;
+    if (!c.activo) cuando = 'seguimiento en pausa';
+    else if (!ult) cuando = 'primera aplicación pendiente';
+    else if (dias < 0) cuando = 'atrasada ' + (-dias) + (dias === -1 ? ' día' : ' días');
+    else if (dias === 0) cuando = 'le toca hoy';
+    else if (dias === 1) cuando = 'le toca mañana';
+    else cuando = 'le toca en ' + dias + ' días';
+    return { vs, pes, ini, act, apl, ult, prox, dias, restantes: rest, semanasDosis: sem, cambio, pct, imc, estado, cuando };
+  }
+  const deFarmacia = () => state.clientes.filter(c => c.farmacia === state.ajustes.farmacia);
+  const buscarCliente = id => state.clientes.find(c => c.id === id) || null;
+
+  function notas(c, i) {
+    const out = [];
+    const m = MEDS[c.med];
+    if (c.activo && i.ult && i.dias < 0) {
+      const atraso = -i.dias;
+      let t = 'Aplicación atrasada ' + atraso + (atraso === 1 ? ' día.' : ' días.');
+      if (m.gracia) {
+        t += atraso <= m.gracia
+          ? ' Según el inserto de ' + m.corto + ', la dosis se puede aplicar hasta ' + m.gracia + ' días después de la fecha.'
+          : ' Según el inserto de ' + m.corto + ', pasados ' + m.gracia + ' días la dosis se omite y se retoma en la fecha habitual. Confirme con el médico tratante.';
+      }
+      out.push(['alert', t]);
+    }
+    if (i.restantes === 0) out.push(['warn', 'La pluma se terminó. La próxima aplicación necesita pluma nueva y receta vigente.']);
+    else if (i.restantes === 1) out.push(['info', 'Queda 1 dosis en la pluma. Avise al cliente para tener lista la siguiente.']);
+    if (m.inicio && c.dosis === m.inicio && i.semanasDosis >= 4) {
+      out.push(['warn', 'Completó ' + i.semanasDosis + ' semanas con la dosis de inicio (' + dosisTxt(c.dosis) + ' mg). El paso siguiente lo define su médico: pida la receta nueva antes de la próxima visita.']);
+    }
+    if (i.imc && i.imc < 25) out.push(['info', 'IMC menor de 25. Confirme con el médico tratante que el tratamiento sigue indicado.']);
+    return out;
+  }
+
+  /* ---------- Vistas ---------- */
+  function top() {
+    const b = state.ajustes.farmacia, otra = b === 'gil' ? 'caribe' : 'gil';
+    return '<header class="top"><div class="tile">' + LOGO + '</div>' +
+      '<div class="wordmark"><small>Farmacia</small><strong>' + BRANDS[b] + '</strong></div>' +
+      '<button class="btn btn-s btn-sm" data-act="marca" aria-label="Cambiar a Farmacia ' + BRANDS[otra] + '">Cambiar</button></header>';
+  }
+  function tabs() {
+    const t = [['hoy', 'Hoy'], ['clientes', 'Clientes'], ['guia', 'Guía'], ['ajustes', 'Ajustes']];
+    return '<nav class="tabs" aria-label="Secciones"><div class="tabs-in">' + t.map(x =>
+      '<button class="tab" data-act="tab" data-tab="' + x[0] + '"' + (ui.tab === x[0] ? ' aria-current="page"' : '') + '>' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONOS[x[0]] + '</svg>' + x[1] + '</button>').join('') +
+      '</div></nav>';
+  }
+  function fila(c, i, conBoton) {
+    return '<div class="fila" data-estado="' + i.estado + '">' +
+      '<button class="fila-main" data-act="ver" data-id="' + c.id + '">' +
+      '<span class="fila-nombre">' + esc(c.nombre) + (c.demo ? '<em class="tag">ejemplo</em>' : '') + '</span>' +
+      '<span class="fila-det">' + esc(medCorto(c)) + ' ' + dosisTxt(c.dosis) + ' mg</span>' +
+      '<span class="fila-cuando">' + i.cuando + '</span></button>' +
+      (conBoton ? '<button class="btn btn-p btn-sm" data-act="visita" data-id="' + c.id + '">Registrar</button>' : '') + '</div>';
+  }
+  function avisos() {
+    let h = '';
+    if (!storageOK) h += '<div class="aviso aviso-alert"><span>Este navegador no permite guardar datos. Lo que registre se pierde al cerrar la página.</span></div>';
+    if (state.clientes.some(c => c.demo)) {
+      h += '<div class="aviso"><span>Los clientes marcados como ejemplo son ficticios, para conocer la app.</span>' +
+        '<button class="btn btn-t btn-sm" data-act="borrar-ejemplos">Borrar</button></div>';
+    }
+    return h;
+  }
+  function vistaHoy() {
+    const hoy = iso(today());
+    const xs = deFarmacia().filter(c => c.activo).map(c => ({ c, i: info(c) }));
+    const atras = xs.filter(x => x.i.dias < 0).sort((a, b) => a.i.dias - b.i.dias);
+    const deHoy = xs.filter(x => x.i.dias === 0);
+    const prox = xs.filter(x => x.i.dias > 0 && x.i.dias <= 7).sort((a, b) => a.i.dias - b.i.dias);
+    const n = deHoy.length;
+    const titular = n === 0 ? 'Hoy no hay aplicaciones programadas' : n === 1 ? 'Hoy toca 1 aplicación' : 'Hoy tocan ' + n + ' aplicaciones';
+    let h = '<section class="view"><p class="fecha">' + fechaLarga(hoy) + '</p><h1 class="titular">' + titular + '</h1>';
+    if (atras.length) h += '<p class="bajada"><b>' + (atras.length === 1 ? '1 cliente atrasado' : atras.length + ' clientes atrasados') + '</b>, conviene llamarlos hoy.</p>';
+    h += avisos();
+    h += '<div class="codigo"><b>' + codigoDelDia(hoy) + '</b><span>Código de hoy. Díctelo al cliente cuando anote el control en su app: con eso sella su carné.</span></div>';
+    if (!deFarmacia().length) {
+      h += '<div class="vacio"><p>Todavía no hay clientes en Farmacia ' + BRANDS[state.ajustes.farmacia] + '. Agregue el primero para empezar el control semanal.</p>' +
+        '<button class="btn btn-p" data-act="nuevo">Agregar cliente</button></div></section>';
+      return h;
+    }
+    const grupo = (tit, arr) => arr.length ? '<div class="grupo"><h2>' + tit + '</h2><div class="lista">' + arr.map(x => fila(x.c, x.i, true)).join('') + '</div></div>' : '';
+    h += grupo('Atrasados', atras) + grupo('Hoy', deHoy) + grupo('Próximos 7 días', prox);
+    const total = xs.reduce((s, x) => s + (x.i.cambio < 0 ? -x.i.cambio : 0), 0);
+    h += '<p class="resumen">' + (xs.length === 1 ? '1 cliente en seguimiento.' : xs.length + ' clientes en seguimiento.') +
+      (total > 0 ? ' Entre todos han bajado ' + num(total) + ' kg.' : '') + '</p></section>';
+    return h;
+  }
+  function listaClientes() {
+    const q = ui.buscar.trim().toLowerCase();
+    const xs = deFarmacia().filter(c => !q || c.nombre.toLowerCase().indexOf(q) >= 0)
+      .sort((a, b) => (a.activo === b.activo ? a.nombre.localeCompare(b.nombre, 'es') : a.activo ? -1 : 1));
+    if (!xs.length) return '<p class="muted" style="margin-top:1rem">' + (q ? 'Ningún cliente coincide con la búsqueda.' : 'Todavía no hay clientes en esta farmacia.') + '</p>';
+    return '<div class="lista" style="margin-top:1rem">' + xs.map(c => fila(c, info(c), false)).join('') + '</div>';
+  }
+  function vistaClientes() {
+    return '<section class="view"><div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.9rem">' +
+      '<h1 class="h-vista">Clientes</h1><button class="btn btn-p btn-sm" data-act="nuevo">Agregar cliente</button></div>' +
+      '<input class="inp" id="buscar" type="search" placeholder="Buscar por nombre" aria-label="Buscar cliente por nombre" value="' + esc(ui.buscar) + '">' +
+      '<div id="lista-clientes">' + listaClientes() + '</div></section>';
+  }
+  function grafico(pes) {
+    if (pes.length < 2) return '<p class="muted" style="margin-top:.6rem">El gráfico aparece con la segunda pesada.</p>';
+    const W = 340, H = 150, pl = 38, pr = 10, pt = 12, pb = 22;
+    const xs = pes.map(p => parse(p.fecha).getTime()), ys = pes.map(p => p.peso);
+    const dMin = Math.min.apply(null, ys), dMax = Math.max.apply(null, ys);
+    let y0 = dMin, y1 = dMax;
+    if (y1 - y0 < 2) { const mid = (y0 + y1) / 2; y0 = mid - 1; y1 = mid + 1; }
+    const m = (y1 - y0) * 0.18; y0 -= m; y1 += m;
+    const x0 = xs[0], x1 = xs[xs.length - 1];
+    const X = t => pl + (W - pl - pr) * ((t - x0) / ((x1 - x0) || 1));
+    const Y = v => pt + (H - pt - pb) * (1 - (v - y0) / (y1 - y0));
+    const P = pes.map((p, k) => [X(xs[k]).toFixed(1), Y(p.peso).toFixed(1)]);
+    const linea = P.map(p => p.join(',')).join(' ');
+    const area = 'M' + P[0][0] + ',' + (H - pb) + ' L' + P.map(p => p.join(',')).join(' L') + ' L' + P[P.length - 1][0] + ',' + (H - pb) + ' Z';
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Peso de ' + num(pes[0].peso) + ' a ' + num(pes[pes.length - 1].peso) + ' kg entre el ' + fechaCorta(pes[0].fecha) + ' y el ' + fechaCorta(pes[pes.length - 1].fecha) + '">' +
+      '<line class="eje" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(dMax).toFixed(1) + '" y2="' + Y(dMax).toFixed(1) + '" stroke-dasharray="3 4"/>' +
+      '<line class="eje" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + (H - pb) + '" y2="' + (H - pb) + '"/>' +
+      '<path class="area" d="' + area + '"/><polyline class="linea" points="' + linea + '"/>' +
+      P.map(p => '<circle class="pto" cx="' + p[0] + '" cy="' + p[1] + '" r="3.4"/>').join('') +
+      '<text x="' + (pl - 6) + '" y="' + (Y(dMax) + 4).toFixed(1) + '" text-anchor="end">' + num(dMax) + '</text>' +
+      '<text x="' + (pl - 6) + '" y="' + (Y(dMin) + 4).toFixed(1) + '" text-anchor="end">' + num(dMin) + '</text>' +
+      '<text x="' + pl + '" y="' + (H - 6) + '">' + fechaCorta(pes[0].fecha) + '</text>' +
+      '<text x="' + (W - pr) + '" y="' + (H - 6) + '" text-anchor="end">' + fechaCorta(pes[pes.length - 1].fecha) + '</text></svg>';
+  }
+  function vistaDetalle(c) {
+    const i = info(c);
+    let h = '<section class="view"><button class="volver" data-act="volver">‹ Clientes</button>' +
+      '<h1 class="nombre">' + esc(c.nombre) + (c.demo ? '<em class="tag">ejemplo</em>' : '') + '</h1>' +
+      '<div class="receta"><strong>' + esc(medNombre(c)) + ', ' + dosisTxt(c.dosis) + ' mg por semana</strong>' +
+      (c.medico ? '<span>Indicado por ' + esc(c.medico) + '</span>' : '<span>Falta anotar el médico que lo indicó</span>') +
+      '<em>Dosis según la receta de su médico. La farmacia aplica y lleva el control; no cambia dosis.</em></div>';
+    h += '<div class="peso">';
+    if (i.act != null) {
+      h += '<div class="peso-act"><b>' + num(i.act) + '</b><span>kg</span></div>';
+      if (i.pes.length > 1) {
+        h += '<p class="cambio">' + (i.cambio < 0 ? '<b>' + num(-i.cambio) + ' kg menos</b> desde el inicio (' + num(-i.pct) + ' %)'
+          : i.cambio > 0 ? num(i.cambio) + ' kg más que al inicio' : 'Mismo peso que al inicio') + '</p>';
+      }
+      if (i.imc) h += '<p class="muted">IMC ' + num(i.imc) + '</p>';
+      h += grafico(i.pes);
+    } else h += '<p class="muted">Sin pesadas registradas. La primera visita fija el peso inicial.</p>';
+    h += '</div>';
+
+    h += '<div class="bloque"><h2>Pluma actual</h2>';
+    if (i.restantes === null) h += '<p class="muted">Sin aplicaciones registradas.</p>';
+    else {
+      const tot = Math.min(c.dosisPorPluma, 8);
+      let seg = ''; for (let k = 0; k < tot; k++) seg += '<i' + (k < i.restantes ? ' class="q"' : '') + '></i>';
+      h += '<div class="pluma" aria-hidden="true">' + seg + '</div><p class="pluma-txt">' +
+        (i.restantes === 0 ? 'Sin dosis disponibles' : i.restantes === 1 ? 'Queda 1 de ' + c.dosisPorPluma + ' dosis' : 'Quedan ' + i.restantes + ' de ' + c.dosisPorPluma + ' dosis') + '</p>';
+    }
+    h += '</div>';
+
+    const enMes = i.vs.length === 0 ? 0 : ((i.vs.length - 1) % 4) + 1; let sf = '';
+    for (let k = 0; k < 4; k++) sf += k < enMes ? '<i class="s">' + LOGO + '</i>' : '<i>' + (k + 1) + '</i>';
+    h += '<div class="bloque"><h2>Sellos del mes</h2><div class="sellos-f" aria-hidden="true">' + sf + '</div><p class="muted" style="margin-top:.4rem">' + enMes + ' de 4, según las visitas registradas aquí. Debe coincidir con el carné del cliente.</p></div>';
+
+    h += notas(c, i).map(n => '<p class="nota nota-' + n[0] + '">' + esc(n[1]) + '</p>').join('');
+
+    h += '<div class="bloque"><h2>Próxima aplicación</h2><p class="cap">' + (c.activo ? (i.ult ? fechaLarga(i.prox) + ', ' + i.cuando : 'Primera aplicación pendiente') : 'Seguimiento en pausa') + '</p>' +
+      '<div class="acciones"><button class="btn btn-p" data-act="visita" data-id="' + c.id + '">Registrar visita</button>' +
+      '<button class="btn btn-s" data-act="recordar" data-id="' + c.id + '">Recordatorio</button></div>' +
+      '<div class="acciones" style="margin-top:.6rem"><button class="btn btn-s" data-act="editar" data-id="' + c.id + '">Editar datos del cliente</button></div></div>';
+
+    h += '<div class="bloque"><h2>Visitas</h2>';
+    if (!i.vs.length) h += '<p class="muted">Todavía no hay visitas.</p>';
+    else {
+      h += '<div class="lista">' + i.vs.slice().reverse().map(v => {
+        const det = [];
+        if (v.aplicada) det.push(dosisTxt(v.dosis) + ' mg en ' + String(v.sitio || '').toLowerCase() + (v.plumaNueva ? ', pluma nueva' : ''));
+        else det.push('Solo control, sin aplicación');
+        if (v.molestias && v.molestias.length) det.push('Molestias: ' + v.molestias.join(', ').toLowerCase());
+        if (v.nota) det.push(v.nota);
+        return '<div class="visita"><span class="v-fecha">' + fechaCorta(v.fecha) + '</span><span class="v-peso">' + (v.peso ? num(v.peso) + ' kg' : '') + '</span>' +
+          '<span class="v-det">' + esc(det.join('. ')) + '</span>' +
+          '<button class="v-del" data-act="borrar-visita" data-id="' + c.id + '" data-vid="' + v.id + '">Eliminar</button></div>';
+      }).join('') + '</div>';
+    }
+    h += '</div></section>';
+    return h;
+  }
+  function vistaGuia() {
+    const b = state.ajustes.farmacia, a = state.ajustes;
+    const li = arr => arr.map(t => '<li>' + esc(t) + '</li>').join('');
+    let h = '<section class="view guia"><div class="guia-cab"><div class="tile">' + LOGO + '</div><div><small>Farmacia ' + BRANDS[b] + '</small><strong>Guía para acompañar su tratamiento</strong></div></div>' +
+      '<p class="guia-intro">' + esc(GUIA.intro) + '</p>' +
+      '<div class="acciones" id="pdf-wrap"' + (puedeDescargar() ? '' : ' hidden') + '><button class="btn btn-s" data-act="pdf">Descargar hoja en PDF</button></div>' +
+      bloqueQR() +
+      '<h2>Cómo comer</h2><ul class="puntos">' + li(GUIA.comer) + '</ul>' +
+      '<h2>Ejercicio en casa</h2><p>' + esc(GUIA.caminar) + '</p><p style="margin-top:.6rem">' + esc(GUIA.fuerza) + '</p>' +
+      '<ol class="rutina">' + GUIA.rutina.map(r => '<li><span>' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span></li>').join('') + '</ol>' +
+      '<ul class="puntos" style="margin-top:.8rem">' + li(GUIA.ejercicioNotas) + '</ul>' +
+      '<h2>Cuándo consultar al médico</h2><h3>De inmediato, si presenta</h3><ul class="puntos puntos-alerta">' + li(GUIA.alarma) + '</ul>' +
+      '<h3>Avísele también si</h3><ul class="puntos">' + li(GUIA.avise) + '</ul>' +
+      '<p class="pie">' + esc(GUIA.pie) + '</p></section>';
+    return h;
+  }
+  function vistaAjustes() {
+    const a = state.ajustes;
+    return '<section class="view"><h1 class="h-vista">Ajustes</h1>' +
+      '<div class="bloque"><h2>Farmacia en uso</h2><div class="opciones">' +
+      Object.keys(BRANDS).map(k => '<button class="opcion" data-act="elegir-marca" data-marca="' + k + '" aria-pressed="' + (a.farmacia === k) + '">' + BRANDS[k] + '</button>').join('') + '</div>' +
+      '<div class="dos"><label class="campo"><span>Teléfono Gil Solano</span><input class="inp" data-aj="tel.gil" inputmode="tel" value="' + esc(a.tel.gil) + '"></label>' +
+      '<label class="campo"><span>Teléfono Caribe</span><input class="inp" data-aj="tel.caribe" inputmode="tel" value="' + esc(a.tel.caribe) + '"></label></div>' +
+      '<p class="muted" style="margin-top:.4rem">El teléfono sale en la hoja en PDF.</p></div>' +
+      '<div class="bloque"><h2>App del cliente</h2>' +
+      '<label class="campo" style="margin-top:0"><span>Enlace que abre el QR</span><input class="inp" data-aj="urlCliente" inputmode="url" autocomplete="off" value="' + esc(a.urlCliente) + '"></label>' +
+      '<p class="muted" style="margin-top:.4rem">Si la app del cliente se muda a otra dirección, cámbiela aquí y vuelva a imprimir el rótulo.</p></div>' +
+      '<div class="bloque"><h2>Datos</h2><p class="muted" style="margin-bottom:.7rem">Todo se guarda solo en este teléfono o computadora. Peso, medicamento y teléfono son datos sensibles: registre a cada cliente con su consentimiento firmado y descargue un respaldo con frecuencia.</p>' +
+      '<div class="pila">' +
+      '<button class="btn btn-s" data-act="csv" data-dl' + (puedeDescargar() ? '' : ' hidden') + '>Exportar visitas para Excel</button>' +
+      '<button class="btn btn-s" data-act="respaldo" data-dl' + (puedeDescargar() ? '' : ' hidden') + '>Descargar respaldo</button>' +
+      '<button class="btn btn-s" data-act="restaurar">Restaurar un respaldo</button>' +
+      '<input type="file" id="archivo" accept=".json,application/json" hidden>' +
+      (state.clientes.some(c => c.demo) ? '<button class="btn btn-s" data-act="borrar-ejemplos">Borrar clientes de ejemplo</button>' : '<button class="btn btn-s" data-act="cargar-ejemplos">Cargar clientes de ejemplo</button>') +
+      '<button class="btn btn-d" data-act="borrar-todo">Borrar todos los datos</button></div></div></section>';
+  }
+
+  function render() {
+    document.documentElement.setAttribute('data-brand', state.ajustes.farmacia);
+    let v;
+    if (ui.tab === 'clientes' && ui.clienteId && buscarCliente(ui.clienteId)) v = vistaDetalle(buscarCliente(ui.clienteId));
+    else if (ui.tab === 'clientes') { ui.clienteId = null; v = vistaClientes(); }
+    else if (ui.tab === 'guia') v = vistaGuia();
+    else if (ui.tab === 'ajustes') v = vistaAjustes();
+    else v = vistaHoy();
+    $('app').innerHTML = top() + '<main>' + v + '</main>' + tabs();
+  }
+
+  /* ---------- Hojas inferiores ---------- */
+  const X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  function abrirSheet(s) { ui.sheet = s; renderSheet(); }
+  function cerrarSheet() { ui.sheet = null; $('sheet-root').innerHTML = ''; }
+  function marco(titulo, cuerpo) {
+    return '<div class="backdrop" data-act="fondo"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">' +
+      '<div class="sheet-cab"><h2 id="sheet-t" tabindex="-1">' + titulo + '</h2><button class="cerrar" data-act="cerrar" aria-label="Cerrar">' + X_ICON + '</button></div>' + cuerpo + '</div></div>';
+  }
+  function chipsDosis(med, actual) {
+    const ds = MEDS[med].dosis;
+    if (!ds.length) return '';
+    return '<div class="chips" style="margin-top:.45rem">' + ds.map(d => '<button type="button" class="chip" data-act="set-dosis" data-v="' + d + '" aria-pressed="' + (Number(actual) === d) + '">' + dosisTxt(d) + '</button>').join('') + '</div>';
+  }
+  function renderSheet() {
+    const s = ui.sheet; if (!s) return;
+    let h = '';
+    if (s.tipo === 'cliente') {
+      const c = s.cliente || { nombre: '', tel: '', estatura: '', med: 'mounjaro', medOtro: '', dosis: 2.5, medico: '', dosisPorPluma: 4, activo: true };
+      const nuevo = !s.cliente;
+      h = marco(nuevo ? 'Agregar cliente' : 'Editar datos del cliente',
+        '<label class="campo"><span>Nombre</span><input class="inp" id="f-nombre" autocomplete="off" value="' + esc(c.nombre) + '"></label>' +
+        '<div class="dos"><label class="campo"><span>Teléfono</span><input class="inp" id="f-tel" inputmode="tel" autocomplete="off" value="' + esc(c.tel) + '"></label>' +
+        '<label class="campo"><span>Estatura (cm)</span><input class="inp" id="f-est" inputmode="numeric" value="' + esc(c.estatura || '') + '"></label></div>' +
+        '<label class="campo"><span>Medicamento de la receta</span><select class="inp" id="f-med">' +
+        Object.keys(MEDS).map(k => '<option value="' + k + '"' + (c.med === k ? ' selected' : '') + '>' + MEDS[k].nombre + '</option>').join('') + '</select></label>' +
+        '<label class="campo" id="w-otro"' + (c.med === 'otro' ? '' : ' hidden') + '><span>Nombre del medicamento</span><input class="inp" id="f-otro" value="' + esc(c.medOtro || '') + '"></label>' +
+        '<div class="campo"><span><label for="f-dosis">Dosis semanal indicada (mg)</label></span><input class="inp" id="f-dosis" inputmode="decimal" value="' + esc(dosisTxt(c.dosis)) + '">' +
+        '<div id="w-chips">' + chipsDosis(c.med, c.dosis) + '</div><small>Debe coincidir con la receta vigente. El ajuste de dosis lo define el médico.</small></div>' +
+        '<div class="dos"><label class="campo"><span>Médico tratante</span><input class="inp" id="f-medico" autocomplete="off" value="' + esc(c.medico) + '"></label>' +
+        '<label class="campo"><span>Dosis por pluma</span><input class="inp" id="f-dpp" inputmode="numeric" value="' + esc(c.dosisPorPluma) + '"></label></div>' +
+        (nuevo
+          ? '<label class="check"><input type="checkbox" id="f-receta"><span>El cliente presentó receta médica vigente para este medicamento.</span></label>' +
+            '<label class="check"><input type="checkbox" id="f-consent"><span>El cliente firmó el consentimiento para que la farmacia registre sus datos de peso y tratamiento.</span></label>'
+          : '<label class="check"><input type="checkbox" id="f-pausa"' + (c.activo ? '' : ' checked') + '><span>Seguimiento en pausa (no aparece en la agenda).</span></label>') +
+        '<div id="f-error" class="error" hidden></div>' +
+        '<div class="acciones"><button class="btn btn-p" data-act="guardar-cliente">Guardar cliente</button></div>' +
+        (nuevo ? '' : '<div class="acciones" style="margin-top:.4rem"><button class="btn btn-d" data-act="borrar-cliente" data-id="' + c.id + '">Eliminar cliente</button></div>'));
+    } else if (s.tipo === 'visita') {
+      const c = buscarCliente(s.id), i = info(c);
+      const plumaNueva = i.restantes === null || i.restantes <= 0;
+      const ultSitio = i.ult ? i.ult.sitio : null;
+      const sug = ultSitio ? SITIOS[(SITIOS.indexOf(ultSitio) + 1) % SITIOS.length] : SITIOS[0];
+      h = marco('Registrar visita de ' + esc(c.nombre.split(' ')[0]),
+        '<p class="nota nota-info">Código de hoy para el carné del cliente: <b>' + codigoDelDia(iso(today())) + '</b></p>' +
+        '<div class="dos"><label class="campo"><span>Fecha</span><input class="inp" id="v-fecha" type="date" value="' + iso(today()) + '" max="' + iso(today()) + '"></label>' +
+        '<label class="campo"><span>Peso (kg)</span><input class="inp" id="v-peso" inputmode="decimal" autocomplete="off" placeholder="' + (i.act ? num(i.act) : '') + '"></label></div>' +
+        '<label class="check"><input type="checkbox" id="v-aplicada" checked><span>Se aplicó la dosis en la farmacia.</span></label>' +
+        '<div id="w-aplic"><div class="campo"><span><label for="f-dosis">Dosis aplicada (mg)</label></span><input class="inp" id="f-dosis" inputmode="decimal" value="' + esc(dosisTxt(c.dosis)) + '">' +
+        '<div id="w-chips">' + chipsDosis(c.med, c.dosis) + '</div><small>Debe coincidir con la receta vigente.</small></div>' +
+        '<div class="campo"><span>Sitio de aplicación</span><div class="chips" id="v-sitios">' +
+        SITIOS.map(x => '<button type="button" class="chip" data-act="sitio" data-v="' + x + '" aria-pressed="' + (x === sug) + '">' + x + '</button>').join('') + '</div>' +
+        (ultSitio ? '<small>La vez pasada fue en ' + ultSitio.toLowerCase() + '. Conviene rotar.</small>' : '') + '</div>' +
+        '<label class="check"><input type="checkbox" id="v-pluma"' + (plumaNueva ? ' checked' : '') + '><span>Se abrió pluma nueva.</span></label></div>' +
+        '<div class="campo"><span>Molestias de la semana</span><div class="chips" id="v-mol">' +
+        MOLESTIAS.map(x => '<button type="button" class="chip" data-act="molestia" data-v="' + x + '" aria-pressed="false">' + x + '</button>').join('') + '</div></div>' +
+        '<label class="campo"><span>Nota</span><input class="inp" id="v-nota" autocomplete="off"></label>' +
+        '<div id="f-error" class="error" hidden></div>' +
+        '<div class="acciones"><button class="btn btn-p" data-act="guardar-visita" data-id="' + c.id + '">Guardar visita</button></div>');
+    } else if (s.tipo === 'recordar') {
+      const c = buscarCliente(s.id), i = info(c);
+      const tel = String(c.tel || '').replace(/\D/g, '');
+      const wa = tel.length === 8 ? '506' + tel : tel.length >= 10 ? tel : '';
+      h = marco('Recordatorio para ' + esc(c.nombre.split(' ')[0]),
+        '<label class="campo"><span>Mensaje</span><textarea class="inp" id="r-msg" rows="7">' + esc(mensaje(c, i)) + '</textarea></label>' +
+        '<div class="acciones"><button class="btn btn-p" data-act="copiar">Copiar mensaje</button>' +
+        (wa ? '<a class="btn btn-s" id="r-wa" data-act="wa" data-tel="' + wa + '" href="https://wa.me/' + wa + '" target="_blank" rel="noopener">Abrir WhatsApp</a>' : '') + '</div>' +
+        (wa ? '' : '<p class="muted" style="margin-top:.6rem">Agregue el teléfono del cliente para abrir WhatsApp desde aquí.</p>'));
+    } else if (s.tipo === 'confirmar') {
+      h = marco(esc(s.titulo), '<p style="margin-top:.6rem">' + esc(s.texto) + '</p>' +
+        '<div class="acciones"><button class="btn btn-s" data-act="cerrar">Cancelar</button><button class="btn btn-dd" data-act="confirmar-ok">' + esc(s.boton) + '</button></div>');
+    }
+    $('sheet-root').innerHTML = h;
+    const t = $('sheet-t'); if (t) t.focus();
+  }
+  function mensaje(c, i) {
+    const nombre = c.nombre.split(' ')[0];
+    let t = 'Hola ' + nombre + ', le saludamos de Farmacia ' + BRANDS[c.farmacia] + '. ';
+    if (i.ult && i.dias < 0) t += 'Su control de peso y aplicación semanal estaba para el ' + fechaLarga(i.prox) + '. Pase por la farmacia y revisamos con usted cómo retomar.';
+    else if (i.dias === 0) t += 'Hoy le toca su control de peso y la aplicación semanal. Le esperamos.';
+    else t += 'Le recordamos su control de peso y aplicación semanal el ' + fechaLarga(i.prox) + '.';
+    if (i.restantes !== null && i.restantes <= 0) t += ' Para esta visita necesita pluma nueva. Si su receta ya venció, tráigala renovada.';
+    if (i.cambio < 0) t += ' Lleva ' + num(-i.cambio) + ' kg menos desde que empezó.';
+    t += ' Recuerde que el tratamiento y la dosis son los que le indicó su médico.';
+    return t;
+  }
+  function error(msg) { const e = $('f-error'); if (e) { e.textContent = msg; e.hidden = false; e.scrollIntoView({ block: 'nearest' }); } }
+
+  /* ---------- Acciones ---------- */
+  function guardarCliente() {
+    const s = ui.sheet, nuevo = !s.cliente;
+    const nombre = $('f-nombre').value.trim();
+    const med = $('f-med').value;
+    const dosis = parseNum($('f-dosis').value);
+    const estTxt = $('f-est').value.trim();
+    const est = estTxt ? parseNum(estTxt) : null;
+    const dpp = parseInt($('f-dpp').value, 10);
+    if (!nombre) return error('Escriba el nombre del cliente.');
+    if (med === 'otro' && !$('f-otro').value.trim()) return error('Escriba el nombre del medicamento.');
+    if (!(dosis > 0)) return error('Anote la dosis semanal que indica la receta.');
+    if (est !== null && !(est >= 100 && est <= 230)) return error('La estatura va en centímetros, por ejemplo 165.');
+    if (!(dpp >= 1 && dpp <= 12)) return error('Las dosis por pluma van de 1 a 12.');
+    if (nuevo && !$('f-receta').checked) return error('Para ingresar al control el cliente debe presentar receta médica vigente.');
+    if (nuevo && !$('f-consent').checked) return error('Falta el consentimiento firmado del cliente para registrar sus datos.');
+    const datos = { nombre, tel: $('f-tel').value.trim(), estatura: est, med, medOtro: med === 'otro' ? $('f-otro').value.trim() : '', dosis, medico: $('f-medico').value.trim(), dosisPorPluma: dpp };
+    let c;
+    if (nuevo) {
+      c = Object.assign({ id: uid(), farmacia: state.ajustes.farmacia, activo: true, demo: false, creado: iso(today()), visitas: [] }, datos);
+      state.clientes.push(c);
+    } else {
+      c = buscarCliente(s.cliente.id); Object.assign(c, datos); c.activo = !$('f-pausa').checked;
+    }
+    save(); cerrarSheet(); ui.tab = 'clientes'; ui.clienteId = c.id; render(); window.scrollTo(0, 0); toast('Cliente guardado');
+  }
+  function guardarVisita(id) {
+    const c = buscarCliente(id); if (!c) return;
+    const fecha = $('v-fecha').value;
+    const peso = parseNum($('v-peso').value);
+    const aplicada = $('v-aplicada').checked;
+    if (!fecha) return error('Elija la fecha de la visita.');
+    if (fecha > iso(today())) return error('La fecha no puede ser futura.');
+    if (!(peso >= 25 && peso <= 350)) return error('Anote el peso en kilogramos, por ejemplo 82,4.');
+    const v = { id: uid(), fecha, peso: Math.round(peso * 10) / 10, aplicada, dosis: null, sitio: '', plumaNueva: false, molestias: [], nota: $('v-nota').value.trim() };
+    if (aplicada) {
+      const dosis = parseNum($('f-dosis').value);
+      const sitio = document.querySelector('#v-sitios [aria-pressed="true"]');
+      if (!(dosis > 0)) return error('Anote la dosis aplicada en mg.');
+      if (!sitio) return error('Marque el sitio de aplicación.');
+      v.dosis = dosis; v.sitio = sitio.getAttribute('data-v'); v.plumaNueva = $('v-pluma').checked;
+    }
+    v.molestias = Array.prototype.map.call(document.querySelectorAll('#v-mol [aria-pressed="true"]'), b => b.getAttribute('data-v'));
+    c.visitas.push(v);
+    if (aplicada) {
+      const ult = info(c).ult;
+      if (ult && ult.id === v.id) c.dosis = v.dosis;
+    }
+    save(); cerrarSheet(); render(); toast('Visita guardada');
+  }
+  function confirmar(titulo, texto, boton, ok) { abrirSheet({ tipo: 'confirmar', titulo, texto, boton, ok }); }
+
+  let toastT = null;
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600);
+  }
+
+  async function guardarArchivo(filename, data) {
+    if (!downloads) {
+      if (enClaude) return toast('Las descargas no están disponibles en esta vista.');
+      const blob = data instanceof Blob ? data : new Blob([data], { type: 'application/octet-stream' });
+      const href = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = href; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(href), 2000); return toast('Archivo guardado');
+    }
+    try { await downloads.save({ filename, data }); toast('Archivo guardado'); }
+    catch (e) {
+      const code = e && e.code;
+      if (code === 'declined') return;
+      toast(code === 'rate_limited' ? 'Ya hay una descarga pendiente. Intente de nuevo en un momento.' : 'No se pudo guardar el archivo en esta vista.');
+    }
+  }
+  function exportarCSV() {
+    const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const filas = [['Farmacia', 'Cliente', 'Teléfono', 'Medicamento', 'Médico', 'Fecha', 'Peso (kg)', 'Se aplicó', 'Dosis (mg)', 'Sitio', 'Pluma nueva', 'Molestias', 'Nota']];
+    state.clientes.forEach(c => info(c).vs.forEach(v => filas.push([
+      'Farmacia ' + BRANDS[c.farmacia], c.nombre + (c.demo ? ' (ejemplo)' : ''), c.tel, medNombre(c), c.medico, v.fecha,
+      v.peso ? String(v.peso).replace('.', ',') : '', v.aplicada ? 'Sí' : 'No', v.aplicada ? String(v.dosis).replace('.', ',') : '',
+      v.sitio, v.plumaNueva ? 'Sí' : 'No', (v.molestias || []).join(', '), v.nota])));
+    if (filas.length === 1) return toast('Todavía no hay visitas para exportar.');
+    guardarArchivo('Control de peso visitas ' + iso(today()) + '.csv', '\uFEFF' + filas.map(f => f.map(q).join(';')).join('\r\n'));
+  }
+  function restaurar(file) {
+    const r = new FileReader();
+    r.onload = () => {
+      let d = null;
+      try { d = JSON.parse(String(r.result)); } catch (e) { d = null; }
+      if (!valido(d)) return toast('Ese archivo no es un respaldo de esta app.');
+      confirmar('Restaurar respaldo', 'Se reemplazan los datos de este dispositivo por los del archivo (' + d.clientes.length + ' clientes).', 'Restaurar', () => {
+        state = d; if (!state.ajustes.tel) state.ajustes.tel = { gil: '', caribe: '' };
+        save(); ui.clienteId = null; render(); toast('Respaldo restaurado');
+      });
+    };
+    r.onerror = () => toast('No se pudo leer el archivo.');
+    r.readAsText(file);
+  }
+
+  /* ---------- Hoja en PDF ---------- */
+  function logoPDF(doc, x, y, size, rgb) {
+    const s = size / 64;
+    doc.setDrawColor(255, 255, 255); doc.setLineCap('round'); doc.setLineWidth(6.5 * s);
+    doc.line(x + 45 * s, y + 8 * s, x + 31 * s, y + 34 * s);
+    doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.roundedRect(x + 6.5 * s, y + 27.5 * s, 51 * s, 11 * s, 5.5 * s, 5.5 * s, 'F');
+    doc.setFillColor(255, 255, 255); doc.roundedRect(x + 8 * s, y + 29 * s, 48 * s, 8 * s, 4 * s, 4 * s, 'F');
+    doc.lines([[0, 11, 6, 18, 14, 18], [10, 0], [8, 0, 14, -7, 14, -18]], x + 13 * s, y + 37 * s, [s, s], 'F', true);
+    doc.roundedRect(x + 22 * s, y + 54 * s, 20 * s, 5 * s, 2.5 * s, 2.5 * s, 'F');
+    doc.setDrawColor(rgb[0], rgb[1], rgb[2]); doc.setLineWidth(3.2 * s);
+    doc.line(x + 32 * s, y + 40.5 * s, x + 32 * s, y + 50.5 * s); doc.line(x + 27 * s, y + 45.5 * s, x + 37 * s, y + 45.5 * s);
+  }
+  function construirPDF(k) {
+    const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter' });
+    const W = 612, H = 792, M = 46, ancho = W - 2 * M;
+    const b = state.ajustes.farmacia, rgb = RGB[b], a = state.ajustes;
+    const TINTA = [24, 40, 33], GRIS = [88, 104, 97];
+    const F = 10.5 * k, LH = 14.2 * k;
+    doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.rect(0, 0, W, 80, 'F');
+    logoPDF(doc, M, 15, 50, rgb);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.text('Farmacia', M + 64, 35);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(23); doc.text(BRANDS[b], M + 64, 58);
+    if (a.tel[b]) { doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.text('Tel. ' + a.tel[b], W - M, 48, { align: 'right' }); }
+    let y = 110;
+    const salto = alto => { if (y + alto > H - 38) { doc.addPage(); y = 56; } };
+    const titulo = t => { salto(40 * k); y += 10 * k; doc.setFont('helvetica', 'bold'); doc.setFontSize(13.5 * k); doc.setTextColor(rgb[0], rgb[1], rgb[2]); doc.text(t, M, y); y += 16 * k; };
+    const sub = t => { salto(28 * k); y += 3 * k; doc.setFont('helvetica', 'bold'); doc.setFontSize(F); doc.setTextColor(TINTA[0], TINTA[1], TINTA[2]); doc.text(t, M, y); y += 13.5 * k; };
+    const parrafo = (t, o) => {
+      o = o || {}; const size = (o.size || 10.5) * k, lh = size * 1.36;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(size);
+      const c = o.color || TINTA; doc.setTextColor(c[0], c[1], c[2]);
+      const ls = doc.splitTextToSize(t, ancho); salto(ls.length * lh);
+      ls.forEach(l => { doc.text(l, M, y); y += lh; }); y += (o.despues == null ? 4 : o.despues) * k;
+    };
+    const vineta = (t, color) => {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(F); doc.setTextColor(TINTA[0], TINTA[1], TINTA[2]);
+      const ls = doc.splitTextToSize(t, ancho - 14); salto(ls.length * LH);
+      const q = color || rgb; doc.setFillColor(q[0], q[1], q[2]); doc.circle(M + 3, y - 3.6 * k, 1.9 * k, 'F');
+      ls.forEach(l => { doc.text(l, M + 14, y); y += LH; }); y += 2.5 * k;
+    };
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(17 * k); doc.setTextColor(TINTA[0], TINTA[1], TINTA[2]);
+    doc.text('Guía para acompañar su tratamiento', M, y); y += 19 * k;
+    parrafo(GUIA.intro, { despues: 2 });
+    titulo('Cómo comer'); GUIA.comer.forEach(t => vineta(t));
+    titulo('Ejercicio en casa'); parrafo(GUIA.caminar); parrafo(GUIA.fuerza, { despues: 6 });
+    GUIA.rutina.forEach(r => {
+      salto(16 * k); doc.setFont('helvetica', 'normal'); doc.setFontSize(F); doc.setTextColor(TINTA[0], TINTA[1], TINTA[2]);
+      doc.text(r[0], M + 14, y); doc.setTextColor(GRIS[0], GRIS[1], GRIS[2]); doc.text(r[1], W - M, y, { align: 'right' });
+      doc.setDrawColor(211, 220, 215); doc.setLineWidth(.6); doc.line(M + 14, y + 4.5 * k, W - M, y + 4.5 * k); y += 16 * k;
+    });
+    y += 4 * k; GUIA.ejercicioNotas.forEach(t => vineta(t));
+    titulo('Cuándo consultar al médico');
+    const gap = 22, cw = (ancho - gap) / 2;
+    const alto = items => { doc.setFont('helvetica', 'normal'); doc.setFontSize(F); return items.reduce((t, x) => t + doc.splitTextToSize(x, cw - 14).length * LH + 2.5 * k, 0); };
+    salto(16.5 * k + Math.max(alto(GUIA.alarma), alto(GUIA.avise)));
+    const columna = (cab, items, x, color) => {
+      let yy = y + 3 * k;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(F); doc.setTextColor(TINTA[0], TINTA[1], TINTA[2]); doc.text(cab, x, yy); yy += 13.5 * k;
+      doc.setFont('helvetica', 'normal');
+      items.forEach(t => {
+        const ls = doc.splitTextToSize(t, cw - 14);
+        doc.setFillColor(color[0], color[1], color[2]); doc.circle(x + 3, yy - 3.6 * k, 1.9 * k, 'F');
+        ls.forEach(l => { doc.text(l, x + 14, yy); yy += LH; }); yy += 2.5 * k;
+      });
+      return yy;
+    };
+    y = Math.max(columna('De inmediato, si presenta', GUIA.alarma, M, [163, 48, 30]), columna('Avísele también si', GUIA.avise, M + cw + gap, rgb));
+    y += 5 * k; salto(36 * k); doc.setDrawColor(211, 220, 215); doc.setLineWidth(.8); doc.line(M, y, W - M, y); y += 13 * k;
+    parrafo(GUIA.pie, { size: 9, color: GRIS });
+    return doc;
+  }
+  function hojaPDF() {
+    /* Se busca que la hoja quepa en una sola página: si no cabe, se reduce la letra por pasos. */
+    const escalas = [1, 0.96, 0.92, 0.88];
+    for (let n = 0; n < escalas.length; n++) { const doc = construirPDF(escalas[n]); if (doc.getNumberOfPages() === 1) return doc; }
+    return construirPDF(0.96);
+  }
+  function qrMatriz(texto) { const q = window.qrcode(0, 'M'); q.addData(texto); q.make(); return q; }
+  function qrSVG(texto) {
+    const q = qrMatriz(texto), n = q.getModuleCount(), m = 3, t = n + 2 * m; let d = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += 'M' + (c + m) + ' ' + (r + m) + 'h1v1h-1z';
+    return '<svg viewBox="0 0 ' + t + ' ' + t + '" role="img" aria-label="Código QR de la app del cliente" shape-rendering="crispEdges"><rect width="' + t + '" height="' + t + '" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+  }
+  let esperaQR = 0;
+  function bloqueQR() {
+    const url = String(state.ajustes.urlCliente || '').trim();
+    let h = '<h2>App para el cliente</h2>';
+    if (!url) return h + '<p class="muted">Falta el enlace de la app del cliente. Agréguelo en Ajustes.</p>';
+    if (typeof window.qrcode !== 'function') {
+      if (esperaQR < 12) { esperaQR++; setTimeout(() => { if (ui.tab === 'guia' && !ui.sheet) render(); }, 700); return h + '<p class="muted">Preparando el código QR.</p>'; }
+      return h + '<p class="muted">No se pudo cargar el generador de QR. Revise la conexión y vuelva a abrir esta pestaña.</p>';
+    }
+    let svg = '';
+    try { svg = qrSVG(url); } catch (e) { return h + '<p class="muted">El enlace es demasiado largo para un QR. Revíselo en Ajustes.</p>'; }
+    return h + '<div class="qr">' + svg + '<p>El cliente lo escanea con la cámara de su celular y lleva en su teléfono el carné con sellos, sus hábitos, su progreso y esta guía.</p></div>' +
+      '<div class="acciones"' + (puedeDescargar() ? '' : ' hidden') + ' data-dl><button class="btn btn-s" data-act="rotulo">Descargar rótulo con el QR</button></div>';
+  }
+  function rotuloPDF() {
+    const url = String(state.ajustes.urlCliente || '').trim();
+    const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter' });
+    const W = 612, M = 56, b = state.ajustes.farmacia, rgb = RGB[b];
+    doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.rect(0, 0, W, 150, 'F');
+    logoPDF(doc, M, 33, 84, rgb);
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'normal'); doc.setFontSize(15); doc.text('Farmacia', M + 106, 66);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(36); doc.text(BRANDS[b], M + 106, 104);
+    doc.setTextColor(24, 40, 33); doc.setFontSize(31); doc.text('Lleve su control de peso', M, 212); doc.text('en el celular', M, 248);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(14); doc.setTextColor(74, 94, 86);
+    doc.text(doc.splitTextToSize('Carné con sellos por cada control semanal, hábitos del día, su progreso y una guía de alimentación y ejercicio.', W - 2 * M), M, 278);
+    const q = qrMatriz(url), n = q.getModuleCount(), lado = 290, x0 = (W - lado) / 2, y0 = 330, u = lado / (n + 6);
+    doc.setDrawColor(211, 220, 215); doc.setLineWidth(1); doc.setFillColor(255, 255, 255); doc.roundedRect(x0, y0, lado, lado, 10, 10, 'FD');
+    doc.setFillColor(0, 0, 0);
+    for (let r = 0; r < n; r++) {
+      let c = 0;
+      while (c < n) {
+        if (!q.isDark(r, c)) { c++; continue; }
+        let f = c; while (f < n && q.isDark(r, f)) f++;
+        doc.rect(x0 + (c + 3) * u, y0 + (r + 3) * u, (f - c) * u + 0.2, u + 0.2, 'F'); c = f;
+      }
+    }
+    doc.setTextColor(24, 40, 33); doc.setFontSize(14);
+    const pasos = ['1. Abra la cámara de su celular y apunte al código.', '2. Toque el enlace que aparece.', '3. Elija Farmacia ' + BRANDS[b] + ' y escriba su nombre.'];
+    pasos.forEach((t, k) => doc.text(t, M, 664 + k * 22));
+    doc.setFontSize(9.5); doc.setTextColor(88, 104, 97);
+    doc.text('Programa de acompañamiento para personas con tratamiento indicado por su médico.', M, 748);
+    doc.text(doc.splitTextToSize(url, W - 2 * M)[0], M, 762);
+    return doc;
+  }
+  function descargarRotulo() {
+    if (!window.jspdf || !window.jspdf.jsPDF || typeof window.qrcode !== 'function') return toast('No se cargó el generador. Revise la conexión e intente de nuevo.');
+    let blob;
+    try { blob = rotuloPDF().output('blob'); } catch (e) { return toast('No se pudo generar el rótulo.'); }
+    guardarArchivo('Rotulo QR Farmacia ' + BRANDS[state.ajustes.farmacia] + '.pdf', blob);
+  }
+  function descargarPDF() {
+    if (!window.jspdf || !window.jspdf.jsPDF) return toast('No se cargó el generador de PDF. Revise la conexión e intente de nuevo.');
+    let blob;
+    try { blob = hojaPDF().output('blob'); } catch (e) { return toast('No se pudo generar el PDF.'); }
+    guardarArchivo('Guia control de peso Farmacia ' + BRANDS[state.ajustes.farmacia] + '.pdf', blob);
+  }
+
+  /* ---------- Eventos ---------- */
+  function ir(tab) { ui.tab = tab; ui.clienteId = null; render(); window.scrollTo(0, 0); }
+
+  document.addEventListener('click', ev => {
+    const el = ev.target.closest('[data-act]'); if (!el) return;
+    const act = el.getAttribute('data-act'), id = el.getAttribute('data-id');
+    if (act === 'fondo') { if (ev.target === el) cerrarSheet(); return; }
+    switch (act) {
+      case 'tab': ir(el.getAttribute('data-tab')); break;
+      case 'marca': case 'elegir-marca': {
+        const b = act === 'marca' ? (state.ajustes.farmacia === 'gil' ? 'caribe' : 'gil') : el.getAttribute('data-marca');
+        state.ajustes.farmacia = b; save(); ui.clienteId = null; ui.buscar = ''; render(); toast('Farmacia ' + BRANDS[b]); break;
+      }
+      case 'ver': ui.tab = 'clientes'; ui.clienteId = id; render(); window.scrollTo(0, 0); break;
+      case 'volver': ui.clienteId = null; render(); window.scrollTo(0, 0); break;
+      case 'nuevo': abrirSheet({ tipo: 'cliente', cliente: null }); break;
+      case 'editar': abrirSheet({ tipo: 'cliente', cliente: buscarCliente(id) }); break;
+      case 'visita': abrirSheet({ tipo: 'visita', id }); break;
+      case 'recordar': abrirSheet({ tipo: 'recordar', id }); break;
+      case 'cerrar': cerrarSheet(); break;
+      case 'guardar-cliente': guardarCliente(); break;
+      case 'guardar-visita': guardarVisita(id); break;
+      case 'set-dosis': {
+        $('f-dosis').value = dosisTxt(parseFloat(el.getAttribute('data-v')));
+        el.parentNode.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(c === el))); break;
+      }
+      case 'sitio': el.parentNode.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(c === el))); break;
+      case 'molestia': el.setAttribute('aria-pressed', String(el.getAttribute('aria-pressed') !== 'true')); break;
+      case 'copiar': copiar(); break;
+      case 'wa': el.href = 'https://wa.me/' + el.getAttribute('data-tel') + '?text=' + encodeURIComponent($('r-msg').value); break;
+      case 'confirmar-ok': { const ok = ui.sheet && ui.sheet.ok; cerrarSheet(); if (ok) ok(); break; }
+      case 'borrar-visita':
+        confirmar('Eliminar visita', 'Se borra el registro de esta visita. No se puede deshacer.', 'Eliminar', () => {
+          const c = buscarCliente(id); if (!c) return;
+          c.visitas = c.visitas.filter(v => v.id !== el.getAttribute('data-vid')); save(); render(); toast('Visita eliminada');
+        }); break;
+      case 'borrar-cliente':
+        confirmar('Eliminar cliente', 'Se borran sus datos y todas sus visitas. No se puede deshacer.', 'Eliminar', () => {
+          state.clientes = state.clientes.filter(c => c.id !== id); save(); ui.clienteId = null; render(); toast('Cliente eliminado');
+        }); break;
+      case 'borrar-ejemplos': state.clientes = state.clientes.filter(c => !c.demo); save(); ui.clienteId = null; render(); toast('Ejemplos borrados'); break;
+      case 'cargar-ejemplos': state.clientes = state.clientes.concat(ejemplos()); save(); render(); toast('Ejemplos cargados'); break;
+      case 'borrar-todo':
+        confirmar('Borrar todos los datos', 'Se borran todos los clientes, las visitas y los ajustes de este dispositivo. No se puede deshacer.', 'Borrar todo', () => {
+          state = { v: 1, ajustes: ajustesBase(), clientes: [] }; save(); ui.clienteId = null; render(); toast('Datos borrados');
+        }); break;
+      case 'csv': exportarCSV(); break;
+      case 'respaldo': guardarArchivo('Respaldo control de peso ' + iso(today()) + '.json', JSON.stringify(state, null, 1)); break;
+      case 'restaurar': { const f = $('archivo'); if (f) { f.value = ''; f.click(); } break; }
+      case 'pdf': descargarPDF(); break;
+      case 'rotulo': descargarRotulo(); break;
+    }
+  });
+
+  function copiar() {
+    const ta = $('r-msg'); if (!ta) return;
+    const listo = () => toast('Mensaje copiado');
+    const manual = () => {
+      ta.focus(); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      if (ok) listo(); else toast('Mantenga presionado el texto para copiarlo.');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(listo, manual);
+    else manual();
+  }
+
+  document.addEventListener('input', ev => {
+    const t = ev.target;
+    if (t.id === 'buscar') { ui.buscar = t.value; const l = $('lista-clientes'); if (l) l.innerHTML = listaClientes(); }
+    else if (t.id === 'f-dosis') {
+      const v = parseNum(t.value);
+      document.querySelectorAll('#w-chips .chip').forEach(c => c.setAttribute('aria-pressed', String(parseFloat(c.getAttribute('data-v')) === v)));
+    }
+  });
+  document.addEventListener('change', ev => {
+    const t = ev.target;
+    if (t.id === 'f-med') {
+      $('w-otro').hidden = t.value !== 'otro';
+      const ini = MEDS[t.value].inicio;
+      if (ini) $('f-dosis').value = dosisTxt(ini);
+      $('w-chips').innerHTML = chipsDosis(t.value, parseNum($('f-dosis').value));
+    } else if (t.id === 'v-aplicada') { $('w-aplic').hidden = !t.checked; }
+    else if (t.id === 'archivo') { if (t.files && t.files[0]) restaurar(t.files[0]); }
+    else if (t.hasAttribute && t.hasAttribute('data-aj')) {
+      const k = t.getAttribute('data-aj'), v = t.value.trim();
+      if (k === 'tel.gil') state.ajustes.tel.gil = v; else if (k === 'tel.caribe') state.ajustes.tel.caribe = v; else state.ajustes[k] = v;
+      save(); toast('Ajustes guardados');
+    }
+  });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && ui.sheet) cerrarSheet(); });
+
+  /* ---------- Descargas: se activan cuando la vista las concede ---------- */
+  if (window.claude && typeof window.claude.use === 'function') {
+    window.claude.use('downloads').then(ns => {
+      downloads = ns || null;
+      if (!downloads) return;
+      document.querySelectorAll('[data-dl], #pdf-wrap').forEach(n => { n.hidden = false; });
+    }).catch(() => { downloads = null; });
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
