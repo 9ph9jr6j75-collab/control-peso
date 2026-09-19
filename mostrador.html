@@ -509,16 +509,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       (conBoton ? '<button class="btn btn-s btn-sm" data-act="recordar-nube" data-id="' + esc(d.id) + '">Recordar</button>' : '') + '</div>';
   }
   function mensajeNube(d, i) {
-    const nombre = String(d.nombre || '').trim().split(/\s+/)[0];
-    let t = 'Hola ' + nombre + ', le saludamos de Farmacia ' + BRANDS[d.farmacia] + '. ';
-    if (i.dias === null) t += 'Le esperamos para su primer control de peso y la aplicación de su tratamiento.';
-    else if (i.dias < 0) t += 'Su dosis semanal estaba para el ' + fechaLarga(i.prox) + '. Pase por la farmacia y revisamos con usted cómo retomar.';
-    else if (i.dias === 0) t += 'Hoy le toca su dosis semanal. Le esperamos para pesarse, aplicársela y sellar su carné.';
-    else t += 'Le recordamos que su dosis semanal es el ' + fechaLarga(i.prox) + '. En la farmacia se la aplicamos, le pesamos y sella su carné.';
-    if (i.restantes !== null && i.restantes <= 0) t += ' Ya le toca pluma nueva: se la tenemos lista. Si su receta venció, tráigala renovada.';
-    else if (i.restantes === 1) t += ' Le queda una dosis en la pluma: conviene ir previendo la siguiente.';
-    if (i.cambio < 0) t += ' Lleva ' + num(-i.cambio) + ' kg menos desde que empezó.';
-    return t + ' Recuerde que el tratamiento y la dosis son los que le indicó su médico.';
+    return textoRecordatorio(String(d.nombre || '').trim().split(/\s+/)[0], d.farmacia, { primera: i.dias === null, dias: i.dias, prox: i.prox, restantes: i.restantes });
   }
   function bloqueNubeClientes() {
     if (!nubeConfigurada) return '';
@@ -872,17 +863,18 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     $('sheet-root').innerHTML = h;
     const t = $('sheet-t'); if (t) t.focus();
   }
-  function mensaje(c, i) {
-    const nombre = c.nombre.split(' ')[0];
-    let t = 'Hola ' + nombre + ', le saludamos de Farmacia ' + BRANDS[c.farmacia] + '. ';
-    if (i.ult && i.dias < 0) t += 'Su control de peso y aplicación semanal estaba para el ' + fechaLarga(i.prox) + '. Pase por la farmacia y revisamos con usted cómo retomar.';
-    else if (i.dias === 0) t += 'Hoy le toca su control de peso y la aplicación semanal. Le esperamos.';
-    else t += 'Le recordamos su control de peso y aplicación semanal el ' + fechaLarga(i.prox) + '.';
-    if (i.restantes !== null && i.restantes <= 0) t += ' Para esta visita necesita pluma nueva. Si su receta ya venció, tráigala renovada.';
-    if (i.cambio < 0) t += ' Lleva ' + num(-i.cambio) + ' kg menos desde que empezó.';
-    t += ' Recuerde que el tratamiento y la dosis son los que le indicó su médico.';
-    return t;
+  /* Recordatorio discreto: no nombra el medicamento, el peso ni la pluma, porque el WhatsApp se asoma en la pantalla bloqueada */
+  function textoRecordatorio(nombre, farmacia, o) {
+    let t = 'Hola ' + nombre + ', le saludamos de Farmacia ' + BRANDS[farmacia] + '. ';
+    if (o.primera) t += 'Le esperamos para su primera cita.';
+    else if (o.dias < 0) t += 'Su cita estaba para el ' + fechaLarga(o.prox) + '. Pase o escríbanos y la reprogramamos.';
+    else if (o.dias === 0) t += 'Le recordamos su cita de hoy. Le esperamos.';
+    else t += 'Le recordamos su cita del ' + fechaLarga(o.prox) + '. Le esperamos.';
+    if (o.restantes !== null && o.restantes <= 0) t += ' Ya le toca retirar su tratamiento del mes, se lo tenemos listo.';
+    else if (o.restantes === 1) t += ' La próxima semana le toca retirar su tratamiento del mes.';
+    return t + ' Recuerde que su tratamiento es el que le indicó su médico.';
   }
+  function mensaje(c, i) { return textoRecordatorio(c.nombre.split(' ')[0], c.farmacia, { primera: !i.ult, dias: i.dias, prox: i.prox, restantes: i.restantes }); }
   function error(msg) { const e = $('f-error'); if (e) { e.textContent = msg; e.hidden = false; e.scrollIntoView({ block: 'nearest' }); } }
 
   /* ---------- Acciones ---------- */
