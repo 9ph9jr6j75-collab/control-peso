@@ -156,6 +156,13 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
 .pluma i{display:block;height:1.15rem;flex:1;border-radius:.2rem;background:var(--line)}
 .pluma i.q{background:var(--brand)}
 .pluma-txt{margin-top:.35rem}
+.nube-cab{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.45rem}
+.nube-cab h2{margin:0;font-family:var(--f-display);font-size:1.0625rem;font-weight:600}
+.cod-g{width:100%;text-align:center;font-family:var(--f-display);font-size:2.4rem;font-weight:700;letter-spacing:.2em;padding:.4rem .2rem .4rem .5rem;border:0;border-bottom:3px solid var(--brand);background:none;border-radius:0;font-variant-numeric:tabular-nums}
+.cod-g:focus{outline:none;border-bottom-color:var(--ink)}
+.dato{display:flex;justify-content:space-between;gap:1rem;padding:.6rem .9rem}
+.dato + .dato{border-top:1px solid var(--line)}
+.dato span:last-child{color:var(--ink-2);text-align:right}
 .sellos-f{display:flex;gap:.55rem}
 .sellos-f i{width:2.7rem;height:2.7rem;border-radius:50%;border:2px dashed var(--ink-2);display:grid;place-items:center;font-style:normal;font-weight:700;color:var(--ink-2)}
 .sellos-f i.s{background:var(--tile);border:0;transform:rotate(-8deg)}
@@ -223,6 +230,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
 
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script async src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="firebase-config.js"></script>
 <script>
 (function () {
   'use strict';
@@ -375,7 +383,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
   if (!state.ajustes.tel) state.ajustes.tel = { gil: '', caribe: '' };
   if (state.ajustes.urlCliente == null) state.ajustes.urlCliente = APP_CLIENTE;
 
-  const ui = { tab: 'hoy', clienteId: null, buscar: '', sheet: null };
+  const ui = { tab: 'hoy', clienteId: null, nubeId: null, buscar: '', sheet: null };
   let downloads = null;
   const enClaude = !!(window.claude && typeof window.claude.use === 'function');
   const puedeDescargar = () => !!downloads || !enClaude;   /* fuera de Claude se usa la descarga normal del navegador */
@@ -433,6 +441,117 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     return out;
   }
 
+  /* ---------- Nube de la farmacia (opcional, Firebase) ----------
+     Con firebase-config.js presente, el personal entra con correo y contraseña y ve a los clientes que aceptaron guardar su copia.
+     La app de la farmacia solo lee esos datos. Lo único que escribe es el traspaso de un carné a un teléfono nuevo. */
+  const CFG = window.FIREBASE_CONFIG || null;
+  const nubeConfigurada = !!(CFG && CFG.apiKey && CFG.projectId);
+  const SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
+  const nubeF = { estado: nubeConfigurada ? 'conectando' : 'apagada', usuario: null, personal: false, clientes: [], error: '' };
+  let fb = null;
+  function cargarScript(src) { return new Promise((ok, no) => { const el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = () => no(new Error('No cargó ' + src)); document.head.appendChild(el); }); }
+  async function iniciarNube() {
+    if (!nubeConfigurada) return;
+    try {
+      if (!window.firebase || !window.firebase.firestore) {
+        await cargarScript(SDK + 'firebase-app-compat.js');
+        await Promise.all([cargarScript(SDK + 'firebase-auth-compat.js'), cargarScript(SDK + 'firebase-firestore-compat.js')]);
+      }
+      const F = window.firebase, app = F.initializeApp(CFG, 'mostrador'), auth = app.auth(), db = app.firestore();
+      fb = { auth, db, ahora: () => F.firestore.FieldValue.serverTimestamp() };
+      auth.onAuthStateChanged(async u => {
+        nubeF.usuario = u && !u.isAnonymous ? { uid: u.uid, email: u.email || '' } : null; nubeF.personal = false; nubeF.clientes = []; nubeF.error = '';
+        if (nubeF.usuario) {
+          try { const d = await db.collection('personal').doc(u.uid).get(); nubeF.personal = d.exists; } catch (e) { nubeF.personal = false; }
+          if (nubeF.personal) await cargarNube();
+        }
+        nubeF.estado = 'lista'; if (!ui.sheet) render();
+      });
+    } catch (e) { nubeF.estado = 'error'; if (!ui.sheet) render(); }
+  }
+  async function cargarNube() {
+    if (!fb || !nubeF.personal) return;
+    try {
+      const qs = await fb.db.collection('clientes').where('farmacia', '==', state.ajustes.farmacia).get(), arr = [];
+      qs.forEach(doc => arr.push(Object.assign({}, doc.data(), { id: doc.id })));
+      arr.sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
+      nubeF.clientes = arr; nubeF.error = '';
+    } catch (e) { nubeF.error = 'No se pudieron cargar los clientes con la app. Revise el internet.'; }
+  }
+  const clienteNube = id => nubeF.clientes.find(c => c.id === id) || null;
+  function infoNube(d) {
+    const hoy = iso(today());
+    const rs = (Array.isArray(d.registros) ? d.registros : []).filter(r => r && r.fecha).slice().sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
+    const pes = rs.filter(r => r.peso > 0), vis = rs.filter(r => r.origen === 'farmacia');
+    const ini = pes.length ? pes[0].peso : null, act = pes.length ? pes[pes.length - 1].peso : null;
+    const ult = vis.length ? vis[vis.length - 1] : null, prox = ult ? addDays(ult.fecha, 7) : null, dias = prox ? diffDays(prox, hoy) : null;
+    const r7 = { caminata: 0, ejercicio: 0, agua: 0, proteina: 0, tipos: [], sint: {} };
+    for (let k = 0; k < 7; k++) {
+      const f = addDays(hoy, -k), h = (d.habitos || {})[f] || {};
+      if (h.caminata) r7.caminata++; if (h.proteina) r7.proteina++; if ((h.agua || 0) >= 8) r7.agua++;
+      if (h.fuerza) { r7.ejercicio++; const t = String(h.fuerzaTipo || '').toLowerCase(); if (t && r7.tipos.indexOf(t) < 0) r7.tipos.push(t); }
+      ((d.sintomas || {})[f] || []).forEach(x => { if (x !== 'Me siento bien') r7.sint[x] = (r7.sint[x] || 0) + 1; });
+    }
+    const estado = dias === null ? 'proximo' : dias < 0 ? 'atrasado' : dias === 0 ? 'hoy' : 'proximo';
+    const cuando = dias === null ? 'todavía sin controles' : dias < 0 ? 'atrasada ' + (-dias) + (dias === -1 ? ' día' : ' días') : dias === 0 ? 'le toca hoy' : dias === 1 ? 'le toca mañana' : 'le toca en ' + dias + ' días';
+    return { rs, pes, vis, ini, act, ult, prox, dias, estado, cuando, r7, cambio: ini != null && act != null ? act - ini : 0, enMes: vis.length === 0 ? 0 : ((vis.length - 1) % 4) + 1 };
+  }
+  function filaNube(d, i) {
+    const t = d.tratamiento;
+    return '<div class="fila" data-estado="' + i.estado + '"><button class="fila-main" data-act="ver-nube" data-id="' + esc(d.id) + '">' +
+      '<span class="fila-nombre">' + esc(d.nombre || 'Sin nombre') + '<em class="tag">con la app</em></span>' +
+      '<span class="fila-det">' + (i.act != null ? num(i.act) + ' kg' : 'Sin pesadas') + (t && MEDS[t.med] ? ', ' + esc(t.med === 'otro' && t.medOtro ? t.medOtro : MEDS[t.med].corto) + ' ' + dosisTxt(t.dosis) + ' mg' : '') + '</span>' +
+      '<span class="fila-cuando">' + i.cuando + '</span></button></div>';
+  }
+  function bloqueNubeClientes() {
+    if (!nubeConfigurada) return '';
+    let h = '<div class="bloque"><div class="nube-cab"><h2>Con la app</h2>' + (nubeF.personal ? '<button class="btn btn-t btn-sm" data-act="nube-actualizar">Actualizar</button>' : '') + '</div>';
+    if (nubeF.estado === 'conectando') return h + '<p class="muted">Conectando con la nube.</p></div>';
+    if (!nubeF.personal) return h + '<p class="muted">Entre con la cuenta de la farmacia en Ajustes para ver a los clientes que usan la app.</p></div>';
+    if (nubeF.error) h += '<p class="nota nota-alert">' + esc(nubeF.error) + '</p>';
+    if (!nubeF.clientes.length) return h + '<p class="muted">Todavía ningún cliente de esta farmacia ha aceptado guardar su copia.</p></div>';
+    return h + '<div class="lista">' + nubeF.clientes.map(d => filaNube(d, infoNube(d))).join('') + '</div></div>';
+  }
+  function vistaDetalleNube(d) {
+    const i = infoNube(d), t = d.tratamiento, r7 = i.r7;
+    let h = '<section class="view"><button class="volver" data-act="volver">‹ Clientes</button><h1 class="nombre">' + esc(d.nombre || 'Sin nombre') + '<em class="tag">con la app</em></h1>' +
+      '<div class="receta"><strong>' + (t && MEDS[t.med] ? esc(t.med === 'otro' && t.medOtro ? t.medOtro : MEDS[t.med].nombre) + ', ' + dosisTxt(t.dosis) + ' mg por semana' : 'Tratamiento sin anotar todavía') + '</strong>' +
+      '<span>Datos que el cliente lleva en su teléfono. Aquí solo se consultan.</span></div><div class="peso">';
+    if (i.act != null) {
+      h += '<div class="peso-act"><b>' + num(i.act) + '</b><span>kg</span></div>';
+      if (i.pes.length > 1) h += '<p class="cambio">' + (i.cambio < 0 ? '<b>' + num(-i.cambio) + ' kg menos</b> desde el inicio' : i.cambio > 0 ? num(i.cambio) + ' kg más que al inicio' : 'Mismo peso que al inicio') + '</p>';
+      h += grafico(i.pes);
+    } else h += '<p class="muted">Sin pesadas registradas.</p>';
+    h += '</div>';
+    let sf = ''; for (let k = 0; k < 4; k++) sf += k < i.enMes ? '<i class="s">' + LOGO + '</i>' : '<i>' + (k + 1) + '</i>';
+    h += '<div class="bloque"><h2>Sellos del mes</h2><div class="sellos-f" aria-hidden="true">' + sf + '</div><p class="cap" style="margin-top:.4rem">' + (i.prox ? fechaLarga(i.prox) + ', ' + i.cuando : 'Todavía sin controles sellados') + '</p></div>';
+    const sint = Object.keys(r7.sint).map(k => k.toLowerCase() + ' (' + r7.sint[k] + (r7.sint[k] === 1 ? ' día)' : ' días)')).join(', ');
+    h += '<div class="bloque"><h2>Sus últimos 7 días</h2><div class="lista">' +
+      '<div class="dato"><span>Caminata</span><span>' + r7.caminata + ' de 7 días</span></div>' +
+      '<div class="dato"><span>Ejercicio</span><span>' + r7.ejercicio + (r7.ejercicio === 1 ? ' vez' : ' veces') + (r7.tipos.length ? ', ' + esc(r7.tipos.join(', ')) : '') + '</span></div>' +
+      '<div class="dato"><span>Agua completa</span><span>' + r7.agua + ' de 7 días</span></div>' +
+      '<div class="dato"><span>Proteína en cada comida</span><span>' + r7.proteina + ' de 7 días</span></div>' +
+      '<div class="dato"><span>Molestias</span><span>' + (sint ? esc(sint) : 'ninguna anotada') + '</span></div></div></div>';
+    h += '<div class="bloque"><h2>Pesadas</h2>' + (i.rs.length ? '<div class="lista">' + i.rs.slice().reverse().map(r =>
+      '<div class="visita"><span class="v-fecha">' + fechaCorta(r.fecha) + '</span><span class="v-peso">' + (r.peso ? num(r.peso) + ' kg' : '') + '</span><span class="v-det">' +
+      (r.origen === 'farmacia' ? 'Control en la farmacia' + (r.dosis ? ', ' + dosisTxt(r.dosis) + ' mg en ' + esc(String(r.sitio || '').toLowerCase()) : '') : 'Pesada en casa') + '</span><span></span></div>').join('') + '</div>' : '<p class="muted">Sin pesadas.</p>') + '</div>';
+    h += '<div class="bloque"><h2>Teléfono nuevo</h2><p class="muted" style="margin-bottom:.6rem">Si el cliente cambió de teléfono, en la app nueva toca "Ya usaba la app en otro teléfono" y le aparece un código de 6 números.</p>' +
+      '<div class="pila"><button class="btn btn-s" data-act="nube-pasar" data-id="' + esc(d.id) + '">Pasar el carné a un teléfono nuevo</button>' +
+      '<button class="btn btn-d" data-act="nube-borrar" data-id="' + esc(d.id) + '">Eliminar esta copia de la nube</button></div></div></section>';
+    return h;
+  }
+  async function pasarCarne(id, codigo) {
+    const c = String(codigo || '').replace(/\D/g, '');
+    if (c.length !== 6) return error('El código tiene 6 números.');
+    try {
+      const v = await fb.db.collection('vinculos').doc(c).get();
+      if (!v.exists) return error('Ese código no aparece. Pídale al cliente que lo revise en su teléfono nuevo.');
+      await fb.db.collection('clientes').doc(id).update({ uid: v.data().uid, vinculado: fb.ahora() });
+      await fb.db.collection('vinculos').doc(c).update({ clienteId: id });
+      cerrarSheet(); toast('Listo. El teléfono nuevo carga los datos en unos segundos.');
+    } catch (e) { error('No se pudo pasar el carné. Revise el internet e intente de nuevo.'); }
+  }
+
   /* ---------- Vistas ---------- */
   function top() {
     const b = state.ajustes.farmacia, otra = b === 'gil' ? 'caribe' : 'gil';
@@ -483,6 +602,10 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     }
     const grupo = (tit, arr) => arr.length ? '<div class="grupo"><h2>' + tit + '</h2><div class="lista">' + arr.map(x => fila(x.c, x.i, true)).join('') + '</div></div>' : '';
     h += grupo('Atrasados', atras) + grupo('Hoy', deHoy) + grupo('Próximos 7 días', prox);
+    if (nubeF.personal) {
+      const app = nubeF.clientes.map(d => ({ d, i: infoNube(d) })).filter(x => x.i.dias !== null && x.i.dias <= 7).sort((a, b) => a.i.dias - b.i.dias);
+      if (app.length) h += '<div class="grupo"><h2>Con la app, esta semana</h2><div class="lista">' + app.map(x => filaNube(x.d, x.i)).join('') + '</div></div>';
+    }
     const total = xs.reduce((s, x) => s + (x.i.cambio < 0 ? -x.i.cambio : 0), 0);
     h += '<p class="resumen">' + (xs.length === 1 ? '1 cliente en seguimiento.' : xs.length + ' clientes en seguimiento.') +
       (total > 0 ? ' Entre todos han bajado ' + num(total) + ' kg.' : '') + '</p></section>';
@@ -499,7 +622,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     return '<section class="view"><div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.9rem">' +
       '<h1 class="h-vista">Clientes</h1><button class="btn btn-p btn-sm" data-act="nuevo">Agregar cliente</button></div>' +
       '<input class="inp" id="buscar" type="search" placeholder="Buscar por nombre" aria-label="Buscar cliente por nombre" value="' + esc(ui.buscar) + '">' +
-      '<div id="lista-clientes">' + listaClientes() + '</div></section>';
+      '<div id="lista-clientes">' + listaClientes() + '</div>' + bloqueNubeClientes() + '</section>';
   }
   function grafico(pes) {
     if (pes.length < 2) return '<p class="muted" style="margin-top:.6rem">El gráfico aparece con la segunda pesada.</p>';
@@ -598,6 +721,21 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       '<p class="pie">' + esc(GUIA.pie) + '</p></section>';
     return h;
   }
+  function bloqueNubeAjustes() {
+    if (!nubeConfigurada) return '';
+    let h = '<div class="bloque"><h2>Nube de la farmacia</h2>';
+    if (nubeF.estado === 'conectando') return h + '<p class="muted">Conectando.</p></div>';
+    if (nubeF.estado === 'error') return h + '<p class="nota nota-alert">No se pudo cargar la conexión con la nube. Revise el internet y vuelva a abrir la app.</p></div>';
+    if (!nubeF.usuario) return h + '<label class="campo" style="margin-top:0"><span>Correo de la farmacia</span><input class="inp" id="n-correo" type="email" inputmode="email" autocomplete="username"></label>' +
+      '<label class="campo"><span>Contraseña</span><input class="inp" id="n-clave" type="password" autocomplete="current-password"></label>' +
+      '<div id="n-error" class="error" hidden></div><div class="acciones"><button class="btn btn-p" data-act="nube-entrar">Entrar</button></div></div>';
+    h += '<p>Entró como <b>' + esc(nubeF.usuario.email) + '</b></p>';
+    if (!nubeF.personal) h += '<p class="nota nota-warn">Esta cuenta todavía no está autorizada como personal. En Firestore, cree en la colección "personal" un documento cuyo ID sea este:</p>' +
+      '<p style="margin-top:.5rem;word-break:break-all;font-weight:700" id="n-uid">' + esc(nubeF.usuario.uid) + '</p>' +
+      '<div class="acciones"><button class="btn btn-s" data-act="nube-copiar-uid">Copiar ID</button><button class="btn btn-s" data-act="nube-revisar">Ya lo creé</button></div>';
+    else h += '<p class="muted" style="margin-top:.3rem">Ve a los clientes que aceptaron guardar su copia: ' + nubeF.clientes.length + ' en Farmacia ' + BRANDS[state.ajustes.farmacia] + '.</p>';
+    return h + '<div class="acciones"><button class="btn btn-s" data-act="nube-salir">Salir de la cuenta</button></div></div>';
+  }
   function vistaAjustes() {
     const a = state.ajustes;
     return '<section class="view"><h1 class="h-vista">Ajustes</h1>' +
@@ -609,6 +747,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       '<div class="bloque"><h2>App del cliente</h2>' +
       '<label class="campo" style="margin-top:0"><span>Enlace que abre el QR</span><input class="inp" data-aj="urlCliente" inputmode="url" autocomplete="off" value="' + esc(a.urlCliente) + '"></label>' +
       '<p class="muted" style="margin-top:.4rem">Si la app del cliente se muda a otra dirección, cámbiela aquí y vuelva a imprimir el rótulo.</p></div>' +
+      bloqueNubeAjustes() +
       '<div class="bloque"><h2>Datos</h2><p class="muted" style="margin-bottom:.7rem">Todo se guarda solo en este teléfono o computadora. Peso, medicamento y teléfono son datos sensibles: registre a cada cliente con su consentimiento firmado y descargue un respaldo con frecuencia.</p>' +
       '<div class="pila">' +
       '<button class="btn btn-s" data-act="csv" data-dl' + (puedeDescargar() ? '' : ' hidden') + '>Exportar visitas para Excel</button>' +
@@ -622,8 +761,9 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
   function render() {
     document.documentElement.setAttribute('data-brand', state.ajustes.farmacia);
     let v;
-    if (ui.tab === 'clientes' && ui.clienteId && buscarCliente(ui.clienteId)) v = vistaDetalle(buscarCliente(ui.clienteId));
-    else if (ui.tab === 'clientes') { ui.clienteId = null; v = vistaClientes(); }
+    if (ui.tab === 'clientes' && ui.nubeId && clienteNube(ui.nubeId)) v = vistaDetalleNube(clienteNube(ui.nubeId));
+    else if (ui.tab === 'clientes' && ui.clienteId && buscarCliente(ui.clienteId)) v = vistaDetalle(buscarCliente(ui.clienteId));
+    else if (ui.tab === 'clientes') { ui.clienteId = null; ui.nubeId = null; v = vistaClientes(); }
     else if (ui.tab === 'guia') v = vistaGuia();
     else if (ui.tab === 'ajustes') v = vistaAjustes();
     else v = vistaHoy();
@@ -697,6 +837,12 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
         '<div class="acciones"><button class="btn btn-p" data-act="copiar">Copiar mensaje</button>' +
         (wa ? '<a class="btn btn-s" id="r-wa" data-act="wa" data-tel="' + wa + '" href="https://wa.me/' + wa + '" target="_blank" rel="noopener">Abrir WhatsApp</a>' : '') + '</div>' +
         (wa ? '' : '<p class="muted" style="margin-top:.6rem">Agregue el teléfono del cliente para abrir WhatsApp desde aquí.</p>'));
+    } else if (s.tipo === 'pasar') {
+      const d = clienteNube(s.id);
+      h = marco('Pasar el carné de ' + esc(String(d ? d.nombre : '').split(' ')[0]), '<p style="margin-top:.5rem">Escriba el código de 6 números que muestra el teléfono nuevo del cliente.</p>' +
+        '<input class="cod-g" id="n-codigo" inputmode="numeric" autocomplete="off" maxlength="6" aria-label="Código de 6 números" style="margin-top:1rem">' +
+        '<p class="muted" style="margin-top:.8rem">Confirme que es la persona correcta antes de pasar el carné: el teléfono anterior deja de tener acceso.</p>' +
+        '<div id="f-error" class="error" hidden></div><div class="acciones"><button class="btn btn-p" data-act="nube-pasar-ok" data-id="' + esc(s.id) + '">Pasar el carné</button></div>');
     } else if (s.tipo === 'confirmar') {
       h = marco(esc(s.titulo), '<p style="margin-top:.6rem">' + esc(s.texto) + '</p>' +
         '<div class="acciones"><button class="btn btn-s" data-act="cerrar">Cancelar</button><button class="btn btn-dd" data-act="confirmar-ok">' + esc(s.boton) + '</button></div>');
@@ -967,10 +1113,29 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       case 'tab': ir(el.getAttribute('data-tab')); break;
       case 'marca': case 'elegir-marca': {
         const b = act === 'marca' ? (state.ajustes.farmacia === 'gil' ? 'caribe' : 'gil') : el.getAttribute('data-marca');
-        state.ajustes.farmacia = b; save(); ui.clienteId = null; ui.buscar = ''; render(); toast('Farmacia ' + BRANDS[b]); break;
+        state.ajustes.farmacia = b; save(); ui.clienteId = null; ui.nubeId = null; ui.buscar = ''; nubeF.clientes = []; render(); toast('Farmacia ' + BRANDS[b]); cargarNube().then(() => { if (!ui.sheet) render(); }); break;
       }
       case 'ver': ui.tab = 'clientes'; ui.clienteId = id; render(); window.scrollTo(0, 0); break;
-      case 'volver': ui.clienteId = null; render(); window.scrollTo(0, 0); break;
+      case 'volver': ui.clienteId = null; ui.nubeId = null; render(); window.scrollTo(0, 0); break;
+      case 'ver-nube': ui.tab = 'clientes'; ui.clienteId = null; ui.nubeId = id; render(); window.scrollTo(0, 0); break;
+      case 'nube-actualizar': cargarNube().then(() => { render(); toast(nubeF.error ? 'Sin conexión' : 'Lista actualizada'); }); break;
+      case 'nube-entrar': {
+        const correo = $('n-correo').value.trim(), clave = $('n-clave').value, err = $('n-error');
+        const decir = m => { err.textContent = m; err.hidden = false; };
+        if (!correo || !clave) { decir('Escriba el correo y la contraseña de la farmacia.'); break; }
+        if (!fb) { decir('La conexión con la nube todavía no carga. Espere un momento e intente de nuevo.'); break; }
+        fb.auth.signInWithEmailAndPassword(correo, clave).catch(e => decir(e && e.code === 'auth/network-request-failed' ? 'No hay internet. Intente de nuevo.' : 'El correo o la contraseña no coinciden.'));
+        break;
+      }
+      case 'nube-salir': if (fb) fb.auth.signOut(); break;
+      case 'nube-revisar': if (fb && nubeF.usuario) fb.db.collection('personal').doc(nubeF.usuario.uid).get().then(d => { nubeF.personal = d.exists; return nubeF.personal ? cargarNube() : null; }).then(() => { render(); toast(nubeF.personal ? 'Cuenta autorizada' : 'Todavía no aparece el documento'); }).catch(() => toast('No se pudo revisar. Intente de nuevo.')); break;
+      case 'nube-copiar-uid': { const t = nubeF.usuario ? nubeF.usuario.uid : ''; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast('ID copiado'), () => toast('Mantenga presionado el ID para copiarlo.')); else toast('Mantenga presionado el ID para copiarlo.'); break; }
+      case 'nube-pasar': abrirSheet({ tipo: 'pasar', id }); break;
+      case 'nube-pasar-ok': pasarCarne(id, $('n-codigo').value); break;
+      case 'nube-borrar':
+        confirmar('Eliminar esta copia de la nube', 'Se borra la copia que guarda la farmacia. Los datos siguen en el teléfono del cliente y, si su app sigue activa, la copia se vuelve a crear.', 'Eliminar', () => {
+          fb.db.collection('clientes').doc(id).delete().then(() => { nubeF.clientes = nubeF.clientes.filter(c => c.id !== id); ui.nubeId = null; render(); toast('Copia eliminada'); }).catch(() => toast('No se pudo eliminar. Revise el internet.'));
+        }); break;
       case 'nuevo': abrirSheet({ tipo: 'cliente', cliente: null }); break;
       case 'editar': abrirSheet({ tipo: 'cliente', cliente: buscarCliente(id) }); break;
       case 'visita': abrirSheet({ tipo: 'visita', id }); break;
@@ -1057,6 +1222,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
   }
 
   render();
+  iniciarNube();
 })();
 </script>
 </body>

@@ -295,6 +295,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 <noscript><p style="padding:1rem">Esta app necesita JavaScript activado.</p></noscript>
 
+<script src="firebase-config.js"></script>
 <script>
 (function () {
   'use strict';
@@ -422,6 +423,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   const dosisTxt = n => Number(n).toLocaleString('es-CR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   const parseNum = s => { const v = parseFloat(String(s == null ? '' : s).trim().replace(',', '.')); return isFinite(v) ? v : NaN; };
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const nuevoId = () => uid() + Math.random().toString(36).slice(2, 12);
   const $ = id => document.getElementById(id);
   const primerNombre = () => String(state.nombre).trim().split(/\s+/)[0];
   const medTxt = t => (t.med === 'otro' && t.medOtro ? t.medOtro : MEDS[t.med].nombre);
@@ -444,6 +446,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     d.habitos = d.habitos && typeof d.habitos === 'object' ? d.habitos : {};
     d.sintomas = d.sintomas && typeof d.sintomas === 'object' ? d.sintomas : {};
     d.tratamiento = d.tratamiento && MEDS[d.tratamiento.med] ? d.tratamiento : null;
+    d.nube = d.nube && typeof d.nube === 'object' && typeof d.nube.acepta === 'boolean' ? { acepta: d.nube.acepta, id: d.nube.acepta ? (d.nube.id || nuevoId()) : null, fecha: d.nube.fecha || null } : null;
     const limite = addDays(iso(today()), -200);
     Object.keys(d.habitos).forEach(k => { if (k < limite) delete d.habitos[k]; });
     Object.keys(d.sintomas).forEach(k => { if (k < limite) delete d.sintomas[k]; });
@@ -456,7 +459,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     try { const d = JSON.parse(raw); if (valido(d)) return normalizar(d); } catch (e) { /* datos dañados */ }
     return null;
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); storageOK = true; } catch (e) { storageOK = false; } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); storageOK = true; } catch (e) { storageOK = false; } subirNube(); }
 
   let state = load();
   const ui = { tab: 'inicio', seg: 'comer', sheet: null, onb: null, molestias: false, selloNuevo: false, fallos: 0, bloqueo: 0 };
@@ -485,6 +488,110 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   }
   function bloqueSellos(c) { const enBloque = c.sellos === 0 ? 0 : ((c.sellos - 1) % 4) + 1; return { enBloque, inicio: c.sellos - enBloque }; }
 
+  /* ---------- Copia en la nube de la farmacia (opcional, Firebase) ----------
+     Solo se activa si existe firebase-config.js con los datos del proyecto. Cada cliente decide si quiere la copia.
+     El teléfono sigue siendo la fuente de los datos: la nube es una copia que la farmacia puede ver. */
+  const CFG = window.FIREBASE_CONFIG || null;
+  const nubeConfigurada = !!(CFG && CFG.apiKey && CFG.projectId);
+  const SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
+  const nube = { lista: false, uid: null, estado: nubeConfigurada ? 'conectando' : 'apagada', t: null, sondeo: null, alListo: null };
+  let fb = null;
+  function cargarScript(src) { return new Promise((ok, no) => { const el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = () => no(new Error('No cargó ' + src)); document.head.appendChild(el); }); }
+  async function iniciarNube() {
+    if (!nubeConfigurada) return;
+    try {
+      if (!window.firebase || !window.firebase.firestore) {
+        await cargarScript(SDK + 'firebase-app-compat.js');
+        await Promise.all([cargarScript(SDK + 'firebase-auth-compat.js'), cargarScript(SDK + 'firebase-firestore-compat.js')]);
+      }
+      const F = window.firebase;
+      /* instancia con nombre propio: así la sesión del cliente no se mezcla con la del mostrador en un mismo teléfono */
+      const app = F.initializeApp(CFG, 'cliente'), auth = app.auth(), db = app.firestore();
+      try { await db.enablePersistence({ synchronizeTabs: true }); } catch (e) { /* sin caché de Firestore: igual funciona */ }
+      fb = { auth, db, ahora: () => F.firestore.FieldValue.serverTimestamp() };
+      auth.onAuthStateChanged(u => {
+        if (u) { nube.uid = u.uid; nube.lista = true; if (nube.estado !== 'sin-permiso') nube.estado = 'pendiente'; subirNube(); pintarNube(); if (nube.alListo) { const f = nube.alListo; nube.alListo = null; f(); } }
+        else auth.signInAnonymously().catch(() => { nube.estado = 'error'; pintarNube(); });
+      });
+    } catch (e) { nube.estado = 'error'; pintarNube(); }
+  }
+  function subirNube() {
+    if (!nube.lista || !state || !state.nube || state.nube.acepta !== true || nube.estado === 'sin-permiso') return;
+    clearTimeout(nube.t); nube.estado = 'pendiente';
+    nube.t = setTimeout(async () => {
+      if (!state || !state.nube || state.nube.acepta !== true) return;
+      try {
+        const datos = JSON.parse(JSON.stringify({ v: 1, uid: nube.uid, farmacia: state.farmacia, nombre: state.nombre, estatura: state.estatura || null, creado: state.creado,
+          tratamiento: state.tratamiento || null, registros: state.registros, habitos: state.habitos, sintomas: state.sintomas, aceptoCopia: state.nube.fecha || null, modificado: Date.now() }));
+        datos.actualizado = fb.ahora();
+        await fb.db.collection('clientes').doc(state.nube.id).set(datos);
+        nube.estado = 'al-dia';
+      } catch (e) { nube.estado = e && e.code === 'permission-denied' ? 'sin-permiso' : 'pendiente'; }
+      pintarNube();
+    }, 2500);
+  }
+  function textoNube() {
+    return { 'al-dia': 'Copia en la farmacia: al día.', pendiente: 'Copia en la farmacia: pendiente, se sube sola cuando haya internet.', conectando: 'Conectando con la farmacia.',
+      error: 'No se pudo conectar con la farmacia. Se intenta de nuevo al abrir la app.', 'sin-permiso': 'Este carné se pasó a otro teléfono. Aquí ya no se guarda copia.' }[nube.estado] || '';
+  }
+  function pintarNube() { const el = $('nube-estado'); if (el) el.textContent = textoNube(); }
+  function elegirCopia(acepta) {
+    const pend = ui.sheet && ui.sheet.pendiente;
+    if (pend) state = normalizar({ v: 1, farmacia: pend.farmacia, nombre: pend.nombre, estatura: null, creado: iso(today()), tratamiento: null, registros: [], habitos: {}, sintomas: {}, nube: { acepta, id: acepta ? nuevoId() : null, fecha: new Date().toISOString() } });
+    else state.nube = { acepta, id: acepta ? ((state.nube && state.nube.id) || nuevoId()) : null, fecha: new Date().toISOString() };
+    if (acepta && nube.estado === 'sin-permiso') nube.estado = 'pendiente';
+    cerrarSheet(); save(); ui.tab = pend ? 'inicio' : ui.tab; render(); if (pend) window.scrollTo(0, 0);
+    toast(acepta ? 'La farmacia guardará una copia' : 'Sus datos quedan solo en este teléfono');
+  }
+  function quitarCopia() {
+    const id = state.nube && state.nube.id;
+    if (fb && id) fb.db.collection('clientes').doc(id).delete().catch(() => { /* si no hay internet, se borra al reconectar */ });
+    state.nube = { acepta: false, id: null, fecha: new Date().toISOString() }; save(); render(); toast('Copia quitada de la farmacia');
+  }
+  /* Teléfono nuevo: se genera un código, la farmacia lo anota en su app y el carné pasa a este teléfono */
+  function pararSondeo() { if (nube.sondeo) { clearInterval(nube.sondeo); nube.sondeo = null; } }
+  async function pedirVinculo() {
+    const s = ui.sheet; if (!s || s.tipo !== 'vinculo') return;
+    if (!nube.lista) { if (nube.estado === 'error') { s.error = 'No hay conexión con la farmacia. Revise el internet e intente de nuevo.'; renderSheet(); } else nube.alListo = pedirVinculo; return; }
+    try {
+      let codigo = null;
+      for (let k = 0; k < 6 && !codigo; k++) {
+        const c = String(Math.floor(100000 + Math.random() * 900000));
+        try { await fb.db.collection('vinculos').doc(c).set({ uid: nube.uid, creado: fb.ahora() }); codigo = c; }
+        catch (e) { if (!(e && e.code === 'permission-denied')) throw e; }   /* código ya usado por otra persona: se prueba otro */
+      }
+      if (!codigo) throw new Error('sin código');
+      if (ui.sheet !== s) { fb.db.collection('vinculos').doc(codigo).delete().catch(() => {}); return; }
+      s.codigo = codigo; renderSheet();
+      let vueltas = 0, ocupado = false;
+      nube.sondeo = setInterval(async () => {
+        if (ui.sheet !== s) return pararSondeo();
+        if (ocupado) return;
+        if (++vueltas > 200) { pararSondeo(); s.error = 'El código se venció. Cierre y vuelva a intentarlo.'; return renderSheet(); }
+        ocupado = true;
+        try {
+          const v = await fb.db.collection('vinculos').doc(codigo).get();
+          const id = v.exists ? v.data().clienteId : null;
+          if (id) {
+            if (state && state.nube && state.nube.id === id) { nube.estado = 'pendiente'; }          /* mismo teléfono que perdió el permiso: conserva lo local */
+            else {
+              const snap = await fb.db.collection('clientes').doc(id).get();
+              if (!snap.exists) throw new Error('sin datos');
+              const d = snap.data();
+              const nuevo = normalizar({ v: 1, farmacia: d.farmacia, nombre: d.nombre, estatura: d.estatura || null, creado: d.creado || iso(today()), tratamiento: d.tratamiento || null,
+                registros: d.registros || [], habitos: d.habitos || {}, sintomas: d.sintomas || {}, nube: { acepta: true, id, fecha: d.aceptoCopia || null } });
+              if (!valido(nuevo)) throw new Error('datos inválidos');
+              state = nuevo;
+            }
+            pararSondeo(); fb.db.collection('vinculos').doc(codigo).delete().catch(() => {});
+            s.codigo = null; cerrarSheet(); save(); ui.tab = 'inicio'; render(); window.scrollTo(0, 0); toast('Datos recuperados');
+          }
+        } catch (e) { /* se vuelve a intentar en la siguiente vuelta */ }
+        ocupado = false;
+      }, 3000);
+    } catch (e) { s.error = 'No se pudo conectar con la farmacia. Revise el internet e intente de nuevo.'; renderSheet(); }
+  }
+
   /* ---------- Bienvenida ---------- */
   function vistaBienvenida() {
     return '<section class="onb"><div class="tile">' + LOGO + '</div>' +
@@ -495,8 +602,8 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       '<label class="campo"><span>¿Cómo se llama?</span><input class="inp" id="o-nombre" autocomplete="given-name" placeholder="Su nombre"></label>' +
       '<div id="f-error" class="error" hidden></div>' +
       '<div class="acciones"><button class="btn btn-p btn-g" data-act="onb-empezar">Empezar</button></div>' +
-      '<p class="muted" style="margin-top:1rem">Sus datos quedan guardados solo en este teléfono.</p>' +
-      '<button class="enlace" data-act="restaurar-abrir">Ya usaba la app en otro teléfono</button></section>';
+      '<p class="muted" style="margin-top:1rem">' + (nubeConfigurada ? 'Sus datos se guardan en este teléfono. Usted decide si la farmacia guarda una copia.' : 'Sus datos quedan guardados solo en este teléfono.') + '</p>' +
+      '<button class="enlace" data-act="recuperar-abrir">Ya usaba la app en otro teléfono</button></section>';
   }
 
   /* ---------- Marco ---------- */
@@ -524,6 +631,10 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       '<h1 class="titular">Hola, ' + esc(primerNombre()) + '. ' + tit + '</h1>' + (baj ? '<p class="bajada">' + baj + '</p>' : '');
     if (!storageOK) html += '<p class="nota nota-alert">Este navegador no guarda datos. Abra la app en Chrome o Safari, no dentro de WhatsApp.</p>';
 
+    if (nubeConfigurada && !state.nube) {
+      html += '<div class="pasos"><h2>¿Guardar una copia en la farmacia?</h2><p class="muted" style="margin-top:.3rem">Así el personal acompaña su avance y, si cambia de teléfono, ahí le recuperan sus datos.</p>' +
+        '<div class="acciones"><button class="btn btn-p" data-act="copia-abrir">Ver y decidir</button></div></div>';
+    }
     /* Carné en pequeño, siempre a la vista: los cuatro sellos del mes */
     const b = bloqueSellos(c); let cs = '';
     for (let k = 0; k < 4; k++) cs += k < b.enBloque ? '<i class="s">' + SELLO + '</i>' : '<i>' + (k + 1) + '</i>';
@@ -712,11 +823,17 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     }
     if (WHATSAPP[state.farmacia]) h += '<a class="btn btn-s" target="_blank" rel="noopener" href="https://wa.me/506' + WHATSAPP[state.farmacia] + '?text=' +
       encodeURIComponent('Hola, soy ' + state.nombre + ', del control de peso. ') + '">Escribir a la farmacia por WhatsApp</a>';
+    if (nubeConfigurada) {
+      const acepta = !!(state.nube && state.nube.acepta);
+      if (acepta) h += '<p class="muted" id="nube-estado">' + esc(textoNube()) + '</p>' +
+        (nube.estado === 'sin-permiso' ? '<button class="btn btn-s" data-act="vinculo-abrir">Recuperar mi copia con ayuda de la farmacia</button>' : '<button class="btn btn-s" data-act="copia-quitar">Quitar mi copia de la farmacia</button>');
+      else h += '<button class="btn btn-s" data-act="copia-abrir">Guardar una copia en la farmacia</button>';
+    }
     h += '<button class="btn btn-s" data-act="perfil">Cambiar mi nombre, estatura o farmacia</button>' +
       '<button class="btn btn-s" data-act="respaldo">Guardar una copia de mis datos</button>' +
       '<button class="btn btn-s" data-act="restaurar-abrir">Recuperar una copia</button>' +
       '<button class="btn btn-d" data-act="borrar-todo">Borrar todos mis datos</button></div></details>' +
-      '<p class="muted" style="margin-top:.8rem">Sus datos están solo en este teléfono. Si lo cambia, guarde antes una copia.</p></section>';
+      '<p class="muted" style="margin-top:.8rem">' + (state.nube && state.nube.acepta ? 'Sus datos están en este teléfono y, con su permiso, en la copia de la farmacia.' : 'Sus datos están solo en este teléfono. Si lo cambia, guarde antes una copia.') + '</p></section>';
     return h;
   }
 
@@ -729,7 +846,11 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 
   /* ---------- Hojas inferiores ---------- */
   function abrirSheet(s) { pararReloj(); ui.sheet = s; renderSheet(); }
-  function cerrarSheet() { pararReloj(); ui.sheet = null; $('sheet-root').innerHTML = ''; }
+  function cerrarSheet() {
+    pararReloj(); pararSondeo();
+    if (ui.sheet && ui.sheet.tipo === 'vinculo' && ui.sheet.codigo && fb) fb.db.collection('vinculos').doc(ui.sheet.codigo).delete().catch(() => {});
+    ui.sheet = null; $('sheet-root').innerHTML = '';
+  }
   function marco(titulo, cuerpo) {
     return '<div class="backdrop" data-act="fondo"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">' +
       '<div class="sheet-cab"><h2 id="sheet-t" tabindex="-1">' + titulo + '</h2><button class="cerrar" data-act="cerrar" aria-label="Cerrar">' + X_ICON + '</button></div>' + cuerpo + '</div></div>';
@@ -846,6 +967,20 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
         '<div id="w-fecha" hidden><label class="campo"><span>¿Qué día fue?</span><input class="inp" id="p-fecha" type="date" value="' + iso(today()) + '" max="' + iso(today()) + '"></label></div>' +
         '<button class="enlace" id="b-fecha" data-act="peso-fecha" style="margin-top:.6rem">Fue otro día</button>' +
         '<div id="f-error" class="error" hidden></div><div class="acciones"><button class="btn btn-p btn-g" data-act="guardar-peso">Guardar</button></div>');
+    } else if (s.tipo === 'consentir') {
+      const f = 'Farmacia ' + BRANDS[s.pendiente ? s.pendiente.farmacia : state.farmacia];
+      h = marco('Una copia en la farmacia', '<p class="wz-q">¿Quiere que ' + f + ' guarde una copia de sus datos?</p>' +
+        '<p class="wz-ayuda">Son su nombre, su peso, su tratamiento y sus hábitos. El personal los ve para acompañar su avance y, si cambia de teléfono, ahí se los recuperan. Puede quitar la copia cuando quiera.</p>' +
+        '<div class="wz-ops"><button class="op-g" data-act="copia-elegir" data-v="si">Sí, guardar una copia</button><button class="op-g" data-act="copia-elegir" data-v="no">No, solo en mi teléfono</button></div>');
+    } else if (s.tipo === 'recuperar') {
+      h = marco('Recuperar mis datos', '<p class="wz-q">¿Cómo quiere recuperarlos?</p><div class="wz-ops">' +
+        '<button class="op-g" data-act="vinculo-abrir">Con ayuda de la farmacia<small>Si aceptó que guardaran una copia</small></button>' +
+        '<button class="op-g" data-act="restaurar-abrir">Tengo un código guardado<small>El que copió desde "Guardar una copia de mis datos"</small></button></div>');
+    } else if (s.tipo === 'vinculo') {
+      h = marco('Recuperar con la farmacia', s.error ? '<div class="error">' + esc(s.error) + '</div><div class="acciones"><button class="btn btn-s" data-act="cerrar">Cerrar</button></div>'
+        : !s.codigo ? '<p class="wz-ayuda" style="margin-top:1rem">Preparando su código.</p>'
+        : '<p class="wz-ayuda" style="margin-top:.8rem">Muéstrele este número al personal de la farmacia.</p><p class="rut-reloj" style="letter-spacing:.08em;font-size:3.4rem">' + s.codigo + '</p>' +
+          '<p class="wz-ayuda" style="text-align:center">Cuando lo anoten en su app, sus datos aparecen aquí solos. No cierre esta pantalla.</p>');
     } else if (s.tipo === 'respaldo') {
       h = marco('Guardar una copia', '<p class="wz-ayuda">Copie este código y mándeselo a usted mismo por WhatsApp. Con él recupera sus datos en otro teléfono.</p>' +
         '<label class="campo"><span>Su código</span><textarea class="inp" id="r-cod" readonly>' + esc(s.codigo) + '</textarea></label>' +
@@ -922,6 +1057,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     const nombre = $('o-nombre').value.trim();
     if (!ui.onb) return error('Toque el nombre de su farmacia.');
     if (!nombre) return error('Escriba su nombre.');
+    if (nubeConfigurada) return abrirSheet({ tipo: 'consentir', pendiente: { farmacia: ui.onb, nombre } });
     state = normalizar({ v: 1, farmacia: ui.onb, nombre, estatura: null, creado: iso(today()), tratamiento: null, registros: [], habitos: {}, sintomas: {} });
     save(); ui.tab = 'inicio'; render(); window.scrollTo(0, 0);
   }
@@ -937,7 +1073,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     let d = null;
     try { d = JSON.parse(decodeURIComponent(escape(atob($('r-cod').value.replace(/\s+/g, ''))))); } catch (e) { d = null; }
     if (!valido(d)) return error('Ese código no sirve. Cópielo completo y vuelva a pegarlo.');
-    state = normalizar(d); save(); cerrarSheet(); ui.tab = 'inicio'; render(); window.scrollTo(0, 0); toast('Datos recuperados');
+    d.nube = null; state = normalizar(d); save(); cerrarSheet(); ui.tab = 'inicio'; render(); window.scrollTo(0, 0); toast('Datos recuperados');
   }
   function copiarDe(id, okMsg) {
     const ta = $(id); if (!ta) return;
@@ -950,7 +1086,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   document.addEventListener('click', ev => {
     const el = ev.target.closest('[data-act]'); if (!el) return;
     const act = el.getAttribute('data-act'), hoy = iso(today());
-    if (act === 'fondo') { if (ev.target === el && ui.sheet && ['rutina', 'control'].indexOf(ui.sheet.tipo) < 0) cerrarSheet(); return; }
+    if (act === 'fondo') { if (ev.target === el && ui.sheet && ['rutina', 'control', 'vinculo', 'consentir'].indexOf(ui.sheet.tipo) < 0) cerrarSheet(); return; }
     switch (act) {
       case 'onb-marca': ui.onb = el.getAttribute('data-marca'); document.documentElement.setAttribute('data-brand', ui.onb);
         el.parentNode.querySelectorAll('.opcion').forEach(o => o.setAttribute('aria-pressed', String(o === el))); { const e = $('f-error'); if (e) e.hidden = true; } break;
@@ -988,6 +1124,11 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       case 'respaldo': abrirSheet({ tipo: 'respaldo', codigo: codigoRespaldo() }); break;
       case 'copiar-codigo': copiarDe('r-cod', 'Código copiado'); break;
       case 'restaurar-abrir': abrirSheet({ tipo: 'restaurar' }); break;
+      case 'recuperar-abrir': abrirSheet({ tipo: nubeConfigurada ? 'recuperar' : 'restaurar' }); break;
+      case 'vinculo-abrir': abrirSheet({ tipo: 'vinculo', codigo: null, error: '' }); pedirVinculo(); break;
+      case 'copia-abrir': abrirSheet({ tipo: 'consentir' }); break;
+      case 'copia-elegir': elegirCopia(el.getAttribute('data-v') === 'si'); break;
+      case 'copia-quitar': confirmar({ titulo: 'Quitar mi copia de la farmacia', texto: 'Se borra la copia que guarda la farmacia. Sus datos siguen en este teléfono.', boton: 'Quitar copia', ok: quitarCopia }); break;
       case 'restaurar-ok': restaurar(); break;
       case 'perfil': abrirSheet({ tipo: 'perfil' }); break;
       case 'e-marca': el.parentNode.querySelectorAll('.opcion').forEach(o => o.setAttribute('aria-pressed', String(o === el))); break;
@@ -1019,6 +1160,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   });
 
   render();
+  iniciarNube();
 })();
 </script>
 </body>
