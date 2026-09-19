@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mi control de peso, Farmacia Gil Solano y Farmacia Caribe</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#1B6B54">
+<meta name="theme-color" content="#1D4E9E">
 <meta name="apple-mobile-web-app-title" content="Mi control">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -15,33 +15,33 @@
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F2F5F3; --surface:#FFFFFF; --ink:#14261F; --ink-2:#4A5E56; --line:#D3DCD7;
+  --bg:#F2F5F9; --surface:#FFFFFF; --ink:#14202E; --ink-2:#4A5A6C; --line:#D3DAE4;
   --warn:#7A4F00; --warn-soft:#FBEFD0; --alert:#A3301E; --alert-soft:#FADED8;
-  --brand:#1B6B54; --brand-fg:#FFFFFF; --brand-soft:#DFF0E9; --brand-ink:#14503F;
-  --tile:#1B6B54; --tile-2:#145241; --tile-fg:#FFFFFF;
+  --brand:#1D4E9E; --brand-fg:#FFFFFF; --brand-soft:#E1EAF8; --brand-ink:#163D7D;
+  --tile:#1D4E9E; --tile-2:#153A78; --tile-fg:#FFFFFF; --tile-txt:#FFFFFF; --tile-dim:rgba(255,255,255,.65);
   --veg:#2F855A; --prot:#B7602A; --har:#D9B23C;
-  --shadow:0 -12px 40px rgba(12,24,20,.28);
+  --shadow:0 -12px 40px rgba(10,18,30,.28);
   --f-display:"Bricolage Grotesque","Trebuchet MS","Segoe UI",system-ui,sans-serif;
   --f-text:"Atkinson Hyperlegible","Segoe UI",Roboto,system-ui,sans-serif;
 }
-:root[data-brand="caribe"]{ --brand:#0F6C8F; --brand-soft:#DDEEF6; --brand-ink:#0B516C; --tile:#0F6C8F; --tile-2:#0A526E; }
+:root[data-brand="caribe"]{ --brand:#1C9CE6; --brand-fg:#04243A; --brand-soft:#DDF0FC; --brand-ink:#0B5F91; --tile:#1C9CE6; --tile-2:#1487CC; --tile-txt:#04243A; --tile-dim:rgba(4,36,58,.5); }
 
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0E1815; --surface:#16231F; --ink:#E7EFEB; --ink-2:#9EB1A9; --line:#2B3C36;
+    --bg:#0D131B; --surface:#16202C; --ink:#E7EDF5; --ink-2:#9EADBF; --line:#2A3748;
     --warn:#F2C76E; --warn-soft:#3A2E12; --alert:#F3A091; --alert-soft:#40201A;
-    --brand:#62C9A9; --brand-fg:#0B1512; --brand-soft:#17342C; --brand-ink:#8ADCC2;
+    --brand:#86ADF2; --brand-fg:#08111C; --brand-soft:#172540; --brand-ink:#AFC8F7;
     --shadow:0 -12px 40px rgba(0,0,0,.55);
   }
-  :root:not([data-theme="light"])[data-brand="caribe"]{ --brand:#6CC3E6; --brand-soft:#14303D; --brand-ink:#97D6F0; }
+  :root:not([data-theme="light"])[data-brand="caribe"]{ --brand:#7CCBF7; --brand-soft:#14303D; --brand-ink:#A9DCF8; }
 }
 :root[data-theme="dark"]{
-  --bg:#0E1815; --surface:#16231F; --ink:#E7EFEB; --ink-2:#9EB1A9; --line:#2B3C36;
+  --bg:#0D131B; --surface:#16202C; --ink:#E7EDF5; --ink-2:#9EADBF; --line:#2A3748;
   --warn:#F2C76E; --warn-soft:#3A2E12; --alert:#F3A091; --alert-soft:#40201A;
-  --brand:#62C9A9; --brand-fg:#0B1512; --brand-soft:#17342C; --brand-ink:#8ADCC2;
+  --brand:#86ADF2; --brand-fg:#08111C; --brand-soft:#172540; --brand-ink:#AFC8F7;
   --shadow:0 -12px 40px rgba(0,0,0,.55);
 }
-:root[data-theme="dark"][data-brand="caribe"]{ --brand:#6CC3E6; --brand-soft:#14303D; --brand-ink:#97D6F0; }
+:root[data-theme="dark"][data-brand="caribe"]{ --brand:#7CCBF7; --brand-soft:#14303D; --brand-ink:#A9DCF8; }
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;font-size:106.25%}
@@ -121,12 +121,12 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 .pasos h2{font-family:var(--f-display);font-size:1.15rem;font-weight:600;margin-bottom:.3rem}
 .pasos li{display:flex;gap:.75rem;align-items:flex-start;margin-top:.7rem}
 .pasos li i{flex:none;width:1.9rem;height:1.9rem;border-radius:50%;background:var(--brand);color:var(--brand-fg);display:grid;place-items:center;font-style:normal;font-weight:700;font-family:var(--f-display)}
-.franja{margin-top:1rem;display:block;width:100%;padding:.8rem .95rem .9rem;border:0;border-radius:1rem;background:linear-gradient(160deg,var(--tile),var(--tile-2));color:var(--tile-fg);text-align:left}
+.franja{margin-top:1rem;display:block;width:100%;padding:.8rem .95rem .9rem;border:0;border-radius:1rem;background:linear-gradient(160deg,var(--tile),var(--tile-2));color:var(--tile-txt);text-align:left}
 .franja-t{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem}
 .franja-t b{font-family:var(--f-display);font-size:1.15rem}
 .franja-t em{font-style:normal;font-size:.92rem;opacity:.9}
 .franja-s{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-top:.7rem}
-.franja-s i{display:grid;place-items:center;width:100%;max-width:3.4rem;aspect-ratio:1;margin:0 auto;border-radius:50%;border:2px dashed rgba(255,255,255,.6);font-style:normal;font-family:var(--f-display);font-weight:600;color:rgba(255,255,255,.75)}
+.franja-s i{display:grid;place-items:center;width:100%;max-width:3.4rem;aspect-ratio:1;margin:0 auto;border-radius:50%;border:2px dashed var(--tile-dim);font-style:normal;font-family:var(--f-display);font-weight:600;color:var(--tile-dim)}
 .franja-s i.s{background:var(--tile-fg);border:0;transform:rotate(-8deg)}
 .franja-s i.s svg{width:68%;height:68%}
 
@@ -213,7 +213,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 .hablada{margin-top:1.4rem;padding:.85rem 1rem;border:1.5px dashed var(--ink-2);border-radius:.5rem;background:var(--surface);font-size:.92rem}
 
 /* Carné */
-.carnet{position:relative;overflow:hidden;border-radius:1.1rem;padding:1.1rem 1.1rem 1.2rem;background:linear-gradient(160deg,var(--tile),var(--tile-2));color:var(--tile-fg)}
+.carnet{position:relative;overflow:hidden;border-radius:1.1rem;padding:1.1rem 1.1rem 1.2rem;background:linear-gradient(160deg,var(--tile),var(--tile-2));color:var(--tile-txt)}
 .carnet-cab{display:flex;align-items:center;gap:.7rem}
 .carnet-cab svg{width:2.6rem;height:2.6rem;flex:none}
 .carnet-cab small{display:block;font-size:.8rem;opacity:.85}
@@ -222,7 +222,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 .carnet-sub{font-size:.92rem;opacity:.9;margin-top:.15rem}
 .sellos{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-top:1.1rem}
 .sello{text-align:center;font-size:.8rem}
-.sello i{display:grid;place-items:center;width:100%;aspect-ratio:1;max-width:4.2rem;margin:0 auto .3rem;border-radius:50%;border:2px dashed rgba(255,255,255,.6);font-style:normal;font-family:var(--f-display);font-size:1.2rem;font-weight:600;color:rgba(255,255,255,.75)}
+.sello i{display:grid;place-items:center;width:100%;aspect-ratio:1;max-width:4.2rem;margin:0 auto .3rem;border-radius:50%;border:2px dashed var(--tile-dim);font-style:normal;font-family:var(--f-display);font-size:1.2rem;font-weight:600;color:var(--tile-dim)}
 .sello.ok i{background:var(--tile-fg);border:0;transform:rotate(-8deg)}
 .sello.ok i svg{width:68%;height:68%}
 .sello.nuevo i{animation:sellar .5s cubic-bezier(.2,1.6,.4,1)}
@@ -243,7 +243,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 .mas .pila{padding:0 1rem 1rem}
 
 /* Hoja inferior */
-.backdrop{position:fixed;inset:0;z-index:20;background:rgba(8,16,13,.55);display:flex;align-items:flex-end;justify-content:center}
+.backdrop{position:fixed;inset:0;z-index:20;background:rgba(8,13,22,.55);display:flex;align-items:flex-end;justify-content:center}
 .sheet{width:100%;max-width:30rem;max-height:94vh;max-height:94dvh;overflow:auto;background:var(--surface);border-radius:1.25rem 1.25rem 0 0;padding:1rem 1rem calc(1.25rem + env(safe-area-inset-bottom));box-shadow:var(--shadow);animation:sube .22s ease-out}
 .sheet-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
 .sheet-cab h2{font-family:var(--f-display);font-size:1.3rem;font-weight:700;letter-spacing:-.015em;line-height:1.15;padding-top:.35rem}
@@ -842,7 +842,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       '<button class="btn btn-s" data-act="respaldo">Guardar una copia de mis datos</button>' +
       '<button class="btn btn-s" data-act="restaurar-abrir">Recuperar una copia</button>' +
       '<button class="btn btn-d" data-act="borrar-todo">Borrar todos mis datos</button></div></details>' +
-      '<p class="muted" style="margin-top:.8rem">' + (state.nube && state.nube.acepta ? 'Sus datos están en este teléfono y, con su permiso, en la copia de la farmacia.' : 'Sus datos están solo en este teléfono. Si lo cambia, guarde antes una copia.') + '</p><p class="muted" style="margin-top:.4rem">Versión 3</p></section>';
+      '<p class="muted" style="margin-top:.8rem">' + (state.nube && state.nube.acepta ? 'Sus datos están en este teléfono y, con su permiso, en la copia de la farmacia.' : 'Sus datos están solo en este teléfono. Si lo cambia, guarde antes una copia.') + '</p><p class="muted" style="margin-top:.4rem">Versión 4</p></section>';
     return h;
   }
 

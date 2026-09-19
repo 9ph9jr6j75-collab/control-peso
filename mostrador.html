@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Control de peso, Farmacia Gil Solano y Farmacia Caribe</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#1B6B54">
+<meta name="theme-color" content="#1D4E9E">
 <meta name="apple-mobile-web-app-title" content="Mostrador">
 <link rel="manifest" href="manifest-mostrador.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-mostrador-32.png">
@@ -15,32 +15,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F2F5F3; --surface:#FFFFFF; --ink:#14261F; --ink-2:#4A5E56; --line:#D3DCD7;
+  --bg:#F2F5F9; --surface:#FFFFFF; --ink:#14202E; --ink-2:#4A5A6C; --line:#D3DAE4;
   --warn:#7A4F00; --warn-soft:#FBEFD0; --alert:#A3301E; --alert-soft:#FADED8;
-  --brand:#1B6B54; --brand-fg:#FFFFFF; --brand-soft:#DFF0E9; --brand-ink:#14503F;
-  --tile:#1B6B54; --tile-fg:#FFFFFF;
-  --shadow:0 -12px 40px rgba(12,24,20,.28);
+  --brand:#1D4E9E; --brand-fg:#FFFFFF; --brand-soft:#E1EAF8; --brand-ink:#163D7D;
+  --tile:#1D4E9E; --tile-fg:#FFFFFF; --tile-txt:#FFFFFF; --tile-dim:rgba(255,255,255,.65);
+  --shadow:0 -12px 40px rgba(10,18,30,.28);
   --f-display:"Bricolage Grotesque","Trebuchet MS","Segoe UI",system-ui,sans-serif;
   --f-text:"Atkinson Hyperlegible","Segoe UI",Roboto,system-ui,sans-serif;
 }
-:root[data-brand="caribe"]{ --brand:#0F6C8F; --brand-soft:#DDEEF6; --brand-ink:#0B516C; --tile:#0F6C8F; }
+:root[data-brand="caribe"]{ --brand:#1C9CE6; --brand-fg:#04243A; --brand-soft:#DDF0FC; --brand-ink:#0B5F91; --tile:#1C9CE6; --tile-txt:#04243A; --tile-dim:rgba(4,36,58,.5); }
 
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0E1815; --surface:#16231F; --ink:#E7EFEB; --ink-2:#9EB1A9; --line:#2B3C36;
+    --bg:#0D131B; --surface:#16202C; --ink:#E7EDF5; --ink-2:#9EADBF; --line:#2A3748;
     --warn:#F2C76E; --warn-soft:#3A2E12; --alert:#F3A091; --alert-soft:#40201A;
-    --brand:#62C9A9; --brand-fg:#0B1512; --brand-soft:#17342C; --brand-ink:#8ADCC2;
+    --brand:#86ADF2; --brand-fg:#08111C; --brand-soft:#172540; --brand-ink:#AFC8F7;
     --shadow:0 -12px 40px rgba(0,0,0,.55);
   }
-  :root:not([data-theme="light"])[data-brand="caribe"]{ --brand:#6CC3E6; --brand-soft:#14303D; --brand-ink:#97D6F0; }
+  :root:not([data-theme="light"])[data-brand="caribe"]{ --brand:#7CCBF7; --brand-soft:#14303D; --brand-ink:#A9DCF8; }
 }
 :root[data-theme="dark"]{
-  --bg:#0E1815; --surface:#16231F; --ink:#E7EFEB; --ink-2:#9EB1A9; --line:#2B3C36;
+  --bg:#0D131B; --surface:#16202C; --ink:#E7EDF5; --ink-2:#9EADBF; --line:#2A3748;
   --warn:#F2C76E; --warn-soft:#3A2E12; --alert:#F3A091; --alert-soft:#40201A;
-  --brand:#62C9A9; --brand-fg:#0B1512; --brand-soft:#17342C; --brand-ink:#8ADCC2;
+  --brand:#86ADF2; --brand-fg:#08111C; --brand-soft:#172540; --brand-ink:#AFC8F7;
   --shadow:0 -12px 40px rgba(0,0,0,.55);
 }
-:root[data-theme="dark"][data-brand="caribe"]{ --brand:#6CC3E6; --brand-soft:#14303D; --brand-ink:#97D6F0; }
+:root[data-theme="dark"][data-brand="caribe"]{ --brand:#7CCBF7; --brand-soft:#14303D; --brand-ink:#A9DCF8; }
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -179,7 +179,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
 .visita .v-del{justify-self:end;background:none;border:0;padding:.35rem 0 .35rem .5rem;min-height:2.2rem;color:var(--ink-2);font-size:.875rem;text-decoration:underline}
 
 /* Guía */
-.guia-cab{display:flex;align-items:center;gap:.8rem;padding:1rem;border-radius:.9rem;background:var(--tile);color:var(--tile-fg)}
+.guia-cab{display:flex;align-items:center;gap:.8rem;padding:1rem;border-radius:.9rem;background:var(--tile);color:var(--tile-txt)}
 .guia-cab .tile{background:none;width:3rem;height:3rem}
 .guia-cab .tile svg{width:3rem;height:3rem}
 .guia-cab small{display:block;font-size:.875rem;opacity:.85}
@@ -209,7 +209,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
 .pila{display:grid;gap:.55rem}
 
 /* Hoja inferior */
-.backdrop{position:fixed;inset:0;z-index:20;background:rgba(8,16,13,.55);display:flex;align-items:flex-end;justify-content:center}
+.backdrop{position:fixed;inset:0;z-index:20;background:rgba(8,13,22,.55);display:flex;align-items:flex-end;justify-content:center}
 .sheet{width:100%;max-width:30rem;max-height:92vh;max-height:92dvh;overflow:auto;background:var(--surface);border-radius:1.25rem 1.25rem 0 0;padding:1rem 1rem calc(1.25rem + env(safe-area-inset-bottom));box-shadow:var(--shadow);animation:sube .22s ease-out}
 .sheet-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
 .sheet-cab h2{font-family:var(--f-display);font-size:1.35rem;font-weight:700;letter-spacing:-.015em;line-height:1.15;padding-top:.3rem}
@@ -252,7 +252,9 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     return String(x % 10000).padStart(4, '0');
   }
   const BRANDS = { gil: 'Gil Solano', caribe: 'Caribe' };
-  const RGB = { gil: [27, 107, 84], caribe: [15, 108, 143] };
+  const RGB = { gil: [29, 78, 158], caribe: [28, 156, 230] };          /* franja y viñetas */
+  const RGB_TIT = { gil: [22, 61, 125], caribe: [11, 95, 145] };      /* títulos, un tono más oscuro para que se lean */
+  const RGB_TXT = { gil: [255, 255, 255], caribe: [4, 36, 58] };      /* texto sobre la franja */
   const MEDS = {
     mounjaro: { nombre: 'Mounjaro (tirzepatida)', corto: 'Mounjaro', inicio: 2.5, gracia: 4, dosis: [2.5, 5, 7.5, 10, 12.5, 15] },
     ozempic: { nombre: 'Ozempic (semaglutida)', corto: 'Ozempic', inicio: 0.25, gracia: 5, dosis: [0.25, 0.5, 1, 2] },
@@ -768,7 +770,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       '<input type="file" id="archivo" accept=".json,application/json" hidden>' +
       (state.clientes.some(c => c.demo) ? '<button class="btn btn-s" data-act="borrar-ejemplos">Borrar clientes de ejemplo</button>' : '<button class="btn btn-s" data-act="cargar-ejemplos">Cargar clientes de ejemplo</button>') +
       '<button class="btn btn-d" data-act="borrar-todo">Borrar todos los datos</button></div></div>' +
-      '<p class="muted" style="margin-top:1.4rem">Versión 3, del 19 de setiembre de 2026</p></section>';
+      '<p class="muted" style="margin-top:1.4rem">Versión 4, del 19 de setiembre de 2026</p></section>';
   }
 
   function render() {
@@ -992,17 +994,17 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter' });
     const W = 612, H = 792, M = 46, ancho = W - 2 * M;
     const b = state.ajustes.farmacia, rgb = RGB[b], a = state.ajustes;
-    const TINTA = [24, 40, 33], GRIS = [88, 104, 97];
+    const TINTA = [20, 32, 46], GRIS = [80, 94, 110];
     const F = 10.5 * k, LH = 14.2 * k;
     doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.rect(0, 0, W, 80, 'F');
     logoPDF(doc, M, 15, 50, rgb);
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(RGB_TXT[b][0], RGB_TXT[b][1], RGB_TXT[b][2]);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.text('Farmacia', M + 64, 35);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(23); doc.text(BRANDS[b], M + 64, 58);
     if (a.tel[b]) { doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.text('Tel. ' + a.tel[b], W - M, 48, { align: 'right' }); }
     let y = 110;
     const salto = alto => { if (y + alto > H - 38) { doc.addPage(); y = 56; } };
-    const titulo = t => { salto(40 * k); y += 10 * k; doc.setFont('helvetica', 'bold'); doc.setFontSize(13.5 * k); doc.setTextColor(rgb[0], rgb[1], rgb[2]); doc.text(t, M, y); y += 16 * k; };
+    const titulo = t => { salto(40 * k); y += 10 * k; doc.setFont('helvetica', 'bold'); doc.setFontSize(13.5 * k); doc.setTextColor(RGB_TIT[b][0], RGB_TIT[b][1], RGB_TIT[b][2]); doc.text(t, M, y); y += 16 * k; };
     const sub = t => { salto(28 * k); y += 3 * k; doc.setFont('helvetica', 'bold'); doc.setFontSize(F); doc.setTextColor(TINTA[0], TINTA[1], TINTA[2]); doc.text(t, M, y); y += 13.5 * k; };
     const parrafo = (t, o) => {
       o = o || {}; const size = (o.size || 10.5) * k, lh = size * 1.36;
@@ -1025,7 +1027,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     GUIA.rutina.forEach(r => {
       salto(16 * k); doc.setFont('helvetica', 'normal'); doc.setFontSize(F); doc.setTextColor(TINTA[0], TINTA[1], TINTA[2]);
       doc.text(r[0], M + 14, y); doc.setTextColor(GRIS[0], GRIS[1], GRIS[2]); doc.text(r[1], W - M, y, { align: 'right' });
-      doc.setDrawColor(211, 220, 215); doc.setLineWidth(.6); doc.line(M + 14, y + 4.5 * k, W - M, y + 4.5 * k); y += 16 * k;
+      doc.setDrawColor(211, 218, 228); doc.setLineWidth(.6); doc.line(M + 14, y + 4.5 * k, W - M, y + 4.5 * k); y += 16 * k;
     });
     y += 4 * k; GUIA.ejercicioNotas.forEach(t => vineta(t));
     titulo('Cuándo consultar al médico');
@@ -1044,7 +1046,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       return yy;
     };
     y = Math.max(columna('De inmediato, si presenta', GUIA.alarma, M, [163, 48, 30]), columna('Avísele también si', GUIA.avise, M + cw + gap, rgb));
-    y += 5 * k; salto(36 * k); doc.setDrawColor(211, 220, 215); doc.setLineWidth(.8); doc.line(M, y, W - M, y); y += 13 * k;
+    y += 5 * k; salto(36 * k); doc.setDrawColor(211, 218, 228); doc.setLineWidth(.8); doc.line(M, y, W - M, y); y += 13 * k;
     parrafo(GUIA.pie, { size: 9, color: GRIS });
     return doc;
   }
@@ -1080,13 +1082,13 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     const W = 612, M = 56, b = state.ajustes.farmacia, rgb = RGB[b];
     doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.rect(0, 0, W, 150, 'F');
     logoPDF(doc, M, 33, 84, rgb);
-    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'normal'); doc.setFontSize(15); doc.text('Farmacia', M + 106, 66);
+    doc.setTextColor(RGB_TXT[b][0], RGB_TXT[b][1], RGB_TXT[b][2]); doc.setFont('helvetica', 'normal'); doc.setFontSize(15); doc.text('Farmacia', M + 106, 66);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(36); doc.text(BRANDS[b], M + 106, 104);
-    doc.setTextColor(24, 40, 33); doc.setFontSize(31); doc.text('Lleve su control de peso', M, 212); doc.text('en el celular', M, 248);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(14); doc.setTextColor(74, 94, 86);
+    doc.setTextColor(20, 32, 46); doc.setFontSize(31); doc.text('Lleve su control de peso', M, 212); doc.text('en el celular', M, 248);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(14); doc.setTextColor(74, 90, 108);
     doc.text(doc.splitTextToSize('Carné con sellos por cada control semanal, hábitos del día, su progreso y una guía de alimentación y ejercicio.', W - 2 * M), M, 278);
     const q = qrMatriz(url), n = q.getModuleCount(), lado = 290, x0 = (W - lado) / 2, y0 = 330, u = lado / (n + 6);
-    doc.setDrawColor(211, 220, 215); doc.setLineWidth(1); doc.setFillColor(255, 255, 255); doc.roundedRect(x0, y0, lado, lado, 10, 10, 'FD');
+    doc.setDrawColor(211, 218, 228); doc.setLineWidth(1); doc.setFillColor(255, 255, 255); doc.roundedRect(x0, y0, lado, lado, 10, 10, 'FD');
     doc.setFillColor(0, 0, 0);
     for (let r = 0; r < n; r++) {
       let c = 0;
@@ -1096,10 +1098,10 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
         doc.rect(x0 + (c + 3) * u, y0 + (r + 3) * u, (f - c) * u + 0.2, u + 0.2, 'F'); c = f;
       }
     }
-    doc.setTextColor(24, 40, 33); doc.setFontSize(14);
+    doc.setTextColor(20, 32, 46); doc.setFontSize(14);
     const pasos = ['1. Abra la cámara de su celular y apunte al código.', '2. Toque el enlace que aparece.', '3. Elija Farmacia ' + BRANDS[b] + ' y escriba su nombre.'];
     pasos.forEach((t, k) => doc.text(t, M, 664 + k * 22));
-    doc.setFontSize(9.5); doc.setTextColor(88, 104, 97);
+    doc.setFontSize(9.5); doc.setTextColor(80, 94, 110);
     doc.text('Programa de acompañamiento para personas con tratamiento indicado por su médico.', M, 748);
     doc.text(doc.splitTextToSize(url, W - 2 * M)[0], M, 762);
     return doc;
