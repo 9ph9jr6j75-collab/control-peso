@@ -120,6 +120,9 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 .pasos{margin-top:1.1rem;padding:1rem;border-radius:1rem;background:var(--surface);border:1px solid var(--line)}
 .pasos h2{font-family:var(--f-display);font-size:1.15rem;font-weight:600;margin-bottom:.3rem}
 .pasos li{display:flex;gap:.75rem;align-items:flex-start;margin-top:.7rem}
+.ico-paso{display:inline-grid;place-items:center;width:1.9rem;height:1.9rem;margin-right:.45rem;vertical-align:middle;border-radius:.5rem;background:var(--brand-soft);color:var(--brand-ink)}
+.ico-paso svg{width:1.25rem;height:1.25rem}
+.aviso-inst{padding:.9rem;border-radius:.9rem;background:var(--brand-soft);color:var(--ink);line-height:1.45}
 .pasos li i{flex:none;width:1.9rem;height:1.9rem;border-radius:50%;background:var(--brand);color:var(--brand-fg);display:grid;place-items:center;font-style:normal;font-weight:700;font-family:var(--f-display)}
 .franja{margin-top:1rem;display:block;width:100%;padding:.8rem .95rem .9rem;border:0;border-radius:1rem;background:linear-gradient(160deg,var(--tile),var(--tile-2));color:var(--tile-txt);text-align:left}
 .franja-t{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem}
@@ -307,8 +310,9 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
 
   const KEY = 'micontrol.paciente.v1';
   const MEDS = {
-    mounjaro: { nombre: 'Mounjaro (tirzepatida)', corto: 'Mounjaro', dosis: [2.5, 5, 7.5, 10, 12.5, 15] },
+    mounjaro: { nombre: 'Mounjaro (tirzepatida)', corto: 'Mounjaro', dosis: [2.5, 5, 7.5, 10, 12.5, 15], pluma: true },   /* KwikPen: 4 dosis por pluma */
     ozempic: { nombre: 'Ozempic (semaglutida)', corto: 'Ozempic', dosis: [0.25, 0.5, 1, 2] },
+    wegovy: { nombre: 'Wegovy (semaglutida)', corto: 'Wegovy', dosis: [0.25, 0.5, 1, 1.7, 2.4], pluma: true },              /* FlexTouch: 4 dosis por pluma */
     otro: { nombre: 'Otro medicamento', corto: 'Otro', dosis: [] }
   };
   const SITIOS = ['Abdomen', 'Muslo', 'Brazo'];
@@ -448,6 +452,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     d.sintomas = d.sintomas && typeof d.sintomas === 'object' ? d.sintomas : {};
     d.tratamiento = d.tratamiento && MEDS[d.tratamiento.med] ? d.tratamiento : null;
     d.tel = typeof d.tel === 'string' ? d.tel : '';
+    d.instalada = !!d.instalada; d.reemplaza = typeof d.reemplaza === 'string' ? d.reemplaza : null;
     d.nube = d.nube && typeof d.nube === 'object' && typeof d.nube.acepta === 'boolean' ? { acepta: d.nube.acepta, id: d.nube.acepta ? (d.nube.id || nuevoId()) : null, fecha: d.nube.fecha || null } : null;
     const limite = addDays(iso(today()), -200);
     Object.keys(d.habitos).forEach(k => { if (k < limite) delete d.habitos[k]; });
@@ -464,7 +469,43 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); storageOK = true; } catch (e) { storageOK = false; } subirNube(); }
 
   let state = load();
-  const ui = { tab: 'inicio', seg: 'comer', sheet: null, onb: null, molestias: false, selloNuevo: false, fallos: 0, bloqueo: 0 };
+  const ui = { tab: 'inicio', seg: 'comer', sheet: null, onb: null, molestias: false, selloNuevo: false, fallos: 0, bloqueo: 0, sinInstalar: false };
+
+  /* ---------- Instalar en la pantalla de inicio ---------- */
+  const UA = navigator.userAgent || '';
+  const esIOS = /iPad|iPhone|iPod/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const esAndroid = /Android/i.test(UA);
+  const esInterno = /FBAN|FBAV|FB_IAB|Instagram|MicroMessenger|TikTok|Line\//i.test(UA);      /* navegador dentro de Facebook, Instagram, etc. */
+  const modo = q => !!(window.matchMedia && window.matchMedia('(display-mode: ' + q + ')').matches);
+  const enApp = () => modo('standalone') || modo('minimal-ui') || modo('fullscreen') || navigator.standalone === true;
+  let avisoInstalar = null;                                                                     /* Android: permite instalar con un toque */
+  window.addEventListener('beforeinstallprompt', ev => { ev.preventDefault(); avisoInstalar = ev; if (!ui.sheet) render(); });
+  window.addEventListener('appinstalled', () => { avisoInstalar = null; if (state) { state.instalada = true; save(); } if (!ui.sheet) render(); toast('App instalada. Búsquela en su pantalla de inicio.'); });
+  const ICO_COMPARTIR = '<path d="M12 15V3.500M8 7l4-4 4 4"/><path d="M8 10.500H6.500A1.500 1.500 0 0 0 5 12v7a1.500 1.500 0 0 0 1.500 1.500h11A1.500 1.500 0 0 0 19 19v-7a1.500 1.500 0 0 0-1.500-1.500H16"/>';
+  const ICO_AGREGAR = '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.500v7M8.500 12h7"/>';
+  const ICO_PUNTOS = '<circle cx="12" cy="5" r="1.300" fill="currentColor"/><circle cx="12" cy="12" r="1.300" fill="currentColor"/><circle cx="12" cy="19" r="1.300" fill="currentColor"/>';
+  function pasosInstalar() {
+    const li = (n, ico, t) => '<li><i>' + n + '</i><span>' + (ico ? '<b class="ico-paso">' + trazo(ico) + '</b>' : '') + t + '</span></li>';
+    if (esIOS) return '<ol>' +
+      li(1, ICO_COMPARTIR, 'Toque el botón <b>Compartir</b>, el cuadrito con la flecha hacia arriba. Si no lo ve, toque los tres puntos y luego Compartir.') +
+      li(2, ICO_AGREGAR, 'Baje en la lista y toque <b>Agregar a inicio</b>.') +
+      li(3, '', 'Toque <b>Agregar</b>, arriba a la derecha.') +
+      li(4, '', 'Salga de Safari y abra la app desde el ícono azul del mortero.') + '</ol>';
+    return '<ol>' +
+      li(1, ICO_PUNTOS, 'Toque los <b>tres puntos</b> de arriba a la derecha. En Samsung Internet son las tres rayas de abajo.') +
+      li(2, ICO_AGREGAR, 'Toque <b>Agregar a pantalla principal</b> o <b>Instalar app</b>.') +
+      li(3, '', 'Toque <b>Instalar</b> o <b>Agregar</b>.') +
+      li(4, '', 'Abra la app desde el ícono azul del mortero en su pantalla.') + '</ol>';
+  }
+  function avisoInterno() {
+    return esInterno ? '<div class="pasos"><h2>Abra esta página en ' + (esIOS ? 'Safari' : 'Chrome') + '</h2><p class="muted" style="margin-top:.3rem">Está dentro de otra app y aquí no se puede instalar ni guardar bien sus datos. Toque los tres puntos de arriba y elija "Abrir en el navegador".</p></div>' : '';
+  }
+  async function instalarYa() {
+    if (!avisoInstalar) return abrirSheet({ tipo: 'instalar' });
+    const ev = avisoInstalar; avisoInstalar = null;
+    try { ev.prompt(); await ev.userChoice; } catch (e) { /* el usuario cerró el aviso */ }
+    if (!ui.sheet) render();
+  }
 
   function hab(f) { const h = state.habitos[f] || {}; return { agua: h.agua || 0, proteina: !!h.proteina, caminata: !!h.caminata, fuerza: !!h.fuerza, fuerzaTipo: h.fuerzaTipo === 'Rutina de la guía' ? 'En casa' : (h.fuerzaTipo || '') }; }
   function setHab(f, cambios) { state.habitos[f] = Object.assign(hab(f), cambios); save(); }
@@ -525,7 +566,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       if (!state || !state.nube || state.nube.acepta !== true) return;
       try {
         const datos = JSON.parse(JSON.stringify({ v: 1, uid: nube.uid, farmacia: state.farmacia, nombre: state.nombre, tel: state.tel || '', estatura: state.estatura || null, creado: state.creado,
-          tratamiento: state.tratamiento || null, registros: state.registros, habitos: state.habitos, sintomas: state.sintomas, aceptoCopia: state.nube.fecha || null, modificado: Date.now() }));
+          tratamiento: state.tratamiento || null, registros: state.registros, habitos: state.habitos, sintomas: state.sintomas, aceptoCopia: state.nube.fecha || null, reemplaza: state.reemplaza || null, modificado: Date.now() }));
         datos.actualizado = fb.ahora();
         await fb.db.collection('clientes').doc(state.nube.id).set(datos);
         nube.estado = 'al-dia';
@@ -598,7 +639,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
   /* ---------- Bienvenida ---------- */
   function vistaBienvenida() {
     return '<section class="onb"><div class="tile">' + LOGO + '</div>' +
-      '<h1>Mi control de peso</h1>' +
+      '<h1>Mi control de peso</h1>' + avisoInterno() +
       '<p class="bajada">Su peso, sus hábitos y el carné de su control semanal en la farmacia, en su celular.</p>' +
       '<div class="campo"><span>¿Cuál es su farmacia?</span><div class="opciones">' +
       Object.keys(BRANDS).map(k => '<button class="opcion" data-act="onb-marca" data-marca="' + k + '" aria-pressed="' + (ui.onb === k) + '"><small>Farmacia</small>' + BRANDS[k] + '</button>').join('') + '</div></div>' +
@@ -606,6 +647,8 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       '<label class="campo"><span>Su WhatsApp</span><input class="inp" id="o-tel" inputmode="tel" autocomplete="tel" placeholder="8888-8888"><small>Para que la farmacia le recuerde su cita. Es opcional.</small></label>' +
       '<div id="f-error" class="error" hidden></div>' +
       '<div class="acciones"><button class="btn btn-p btn-g" data-act="onb-empezar">Empezar</button></div>' +
+      (!enApp() && avisoInstalar ? '<div class="acciones"><button class="btn btn-s" data-act="instalar-ya">Instalar la app en mi celular</button></div>' : '') +
+      (!enApp() && !avisoInstalar ? '<button class="enlace" data-act="instalar-ver" style="margin-top:.9rem">¿Cómo la dejo como app en mi pantalla?</button>' : '') +
       '<p class="muted" style="margin-top:1rem">' + (nubeConfigurada ? 'Sus datos se guardan en este teléfono. Usted decide si la farmacia guarda una copia.' : 'Sus datos quedan guardados solo en este teléfono.') + '</p>' +
       '<button class="enlace" data-act="recuperar-abrir">Ya usaba la app en otro teléfono</button></section>';
   }
@@ -649,6 +692,9 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     if (!c.dosisHoy && !c.selladoHoy && (c.dias === null || c.dias <= 1)) html += '<button class="enlace" data-act="casa-abrir">Me apliqué la dosis en casa</button>';
     if (!state.tel && (!nubeConfigurada || (state.nube && state.nube.acepta))) html += '<div class="pasos"><h2>¿Le recordamos su cita por WhatsApp?</h2><p class="muted" style="margin-top:.3rem">Anote su número y la farmacia le avisa cuando le toca el control.</p>' +
       '<div class="acciones"><button class="btn btn-s" data-act="perfil">Anotar mi WhatsApp</button></div></div>';
+    if (!enApp() && !state.instalada && !esIOS) html += '<div class="pasos"><h2>Ponga la app en su pantalla</h2><p class="muted" style="margin-top:.3rem">Le queda con su ícono, como cualquier app, y la abre con un toque.</p>' +
+      '<div class="acciones"><button class="btn btn-s" data-act="' + (avisoInstalar ? 'instalar-ya">Instalar ahora' : 'instalar-ver">Ver cómo se hace') + '</button></div>' +
+      '<button class="enlace" data-act="instalar-ocultar">Ya la tengo en mi pantalla</button></div>';
     if (c.sellos === 0) {
       html += '<div class="pasos"><h2>Así funciona</h2><ol>' +
         '<li><i>1</i><span>Cada día marque aquí lo que hizo: agua, comida, caminata y ejercicio.</span></li>' +
@@ -815,7 +861,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     h += '<div class="bloque"><h2>Mi tratamiento</h2><div class="receta">' +
       (t ? '<strong>' + esc(medTxt(t)) + ', ' + dosisTxt(t.dosis) + ' mg por semana</strong>' : '<strong>Se anota la primera vez que selle su carné</strong>') +
       '<em>La dosis es la que indica la receta de su médico. La farmacia la aplica y lleva el control, no la cambia.</em></div>';
-    if (t && t.med === 'mounjaro' && c.restantes !== null) {
+    if (t && MEDS[t.med] && MEDS[t.med].pluma && c.restantes !== null) {
       const tot = Math.min(c.porPluma, 8); let seg = '';
       for (let k = 0; k < tot; k++) seg += '<i' + (k < c.restantes ? ' class="q"' : '') + '></i>';
       h += '<div class="pluma" aria-hidden="true">' + seg + '</div><p style="margin-top:.35rem">' +
@@ -839,10 +885,11 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       else h += '<button class="btn btn-s" data-act="copia-abrir">Guardar una copia en la farmacia</button>';
     }
     h += '<button class="btn btn-s" data-act="perfil">Cambiar mi nombre, WhatsApp o farmacia</button>' +
+      (!enApp() ? '<button class="btn btn-s" data-act="instalar-ver">Poner la app en mi pantalla</button>' : '') +
       '<button class="btn btn-s" data-act="respaldo">Guardar una copia de mis datos</button>' +
       '<button class="btn btn-s" data-act="restaurar-abrir">Recuperar una copia</button>' +
       '<button class="btn btn-d" data-act="borrar-todo">Borrar todos mis datos</button></div></details>' +
-      '<p class="muted" style="margin-top:.8rem">' + (state.nube && state.nube.acepta ? 'Sus datos están en este teléfono y, con su permiso, en la copia de la farmacia.' : 'Sus datos están solo en este teléfono. Si lo cambia, guarde antes una copia.') + '</p><p class="muted" style="margin-top:.4rem">Versión 4</p></section>';
+      '<p class="muted" style="margin-top:.8rem">' + (state.nube && state.nube.acepta ? 'Sus datos están en este teléfono y, con su permiso, en la copia de la farmacia.' : 'Sus datos están solo en este teléfono. Si lo cambia, guarde antes una copia.') + '</p><p class="muted" style="margin-top:.4rem">Versión 6</p></section>';
     return h;
   }
 
@@ -882,7 +929,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       if (state.tratamiento) p.push('igual');
       if (!state.tratamiento || d.igual === false) p.push('med', 'dosis');
       p.push('sitio');
-      if (d.med === 'mounjaro') p.push('pluma');
+      if (MEDS[d.med] && MEDS[d.med].pluma) p.push('pluma');
     }
     if (!d.enCasa) p.push('codigo');
     return p;
@@ -924,7 +971,7 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
         op('igual', 'si', 'Sí, la misma', '', d.igual === true) + op('igual', 'no', 'No, cambió', 'Por indicación de su médico', d.igual === false) + '</div>';
     } else if (s.paso === 'med') {
       h += '<p class="wz-q">¿Cuál es su medicamento?</p><p class="wz-ayuda">El de su receta médica.</p><div class="wz-ops">' +
-        op('med', 'mounjaro', 'Mounjaro', 'tirzepatida', d.med === 'mounjaro') + op('med', 'ozempic', 'Ozempic', 'semaglutida', d.med === 'ozempic') + op('med', 'otro', 'Otro', '', d.med === 'otro') + '</div>';
+        op('med', 'mounjaro', 'Mounjaro', 'tirzepatida', d.med === 'mounjaro') + op('med', 'ozempic', 'Ozempic', 'semaglutida', d.med === 'ozempic') + op('med', 'wegovy', 'Wegovy', 'semaglutida', d.med === 'wegovy') + op('med', 'otro', 'Otro', '', d.med === 'otro') + '</div>';
       if (d.med === 'otro') h += '<label class="campo"><span>¿Cómo se llama?</span><input class="inp" id="wz-in" autocomplete="off" value="' + esc(d.medOtro) + '"></label>' + sig();
     } else if (s.paso === 'dosis') {
       const ds = MEDS[d.med].dosis;
@@ -1009,6 +1056,16 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       h = marco('Guardar una copia', '<p class="wz-ayuda">Copie este código y mándeselo a usted mismo por WhatsApp. Con él recupera sus datos en otro teléfono.</p>' +
         '<label class="campo"><span>Su código</span><textarea class="inp" id="r-cod" readonly>' + esc(s.codigo) + '</textarea></label>' +
         '<div class="acciones"><button class="btn btn-p btn-g" data-act="copiar-codigo">Copiar código</button></div>');
+    } else if (s.tipo === 'instalar') {
+      const conDatos = esIOS && !!state;      /* en iPhone la app instalada guarda aparte de Safari: hay que llevarse los datos */
+      h = marco('Poner la app en mi pantalla', avisoInterno() +
+        (conDatos ? '<div class="aviso-inst"><b>En iPhone, la app instalada empieza en blanco.</b> Para llevarse lo que ya anotó aquí, copie primero su código. Después de instalarla, ábrala, toque "Ya usaba la app en otro teléfono" y pegue el código.' +
+          '<textarea class="inp" id="i-cod" readonly rows="2" style="margin-top:.6rem">' + esc(codigoRespaldo()) + '</textarea>' +
+          '<div class="acciones"><button class="btn btn-s" data-act="instalar-copiar">Copiar mi código</button></div>' +
+          (state.nube && state.nube.acepta ? '<p class="muted" style="margin-top:.5rem">Si se le complica, en la farmacia se lo pasan con el código de 6 números.</p>' : '') + '</div>' : '') +
+        (esIOS && !state ? '<p class="muted" style="margin-bottom:.8rem">Hágalo antes de registrarse. Cuando abra la app desde el ícono, ahí pone su nombre.</p>' : '') +
+        '<div class="pasos" style="margin-top:' + (conDatos ? '1rem' : '0') + '">' + pasosInstalar() + '</div>' +
+        '<div class="acciones"><button class="btn btn-p btn-g" data-act="cerrar">Entendido</button></div>');
     } else if (s.tipo === 'restaurar') {
       h = marco('Recuperar mis datos', '<label class="campo"><span>Pegue aquí el código que guardó</span><textarea class="inp" id="r-cod"></textarea></label>' +
         '<p class="muted" style="margin-top:.5rem">Reemplaza lo que haya en este teléfono.</p>' +
@@ -1099,7 +1156,8 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
     let d = null;
     try { d = JSON.parse(decodeURIComponent(escape(atob($('r-cod').value.replace(/\s+/g, ''))))); } catch (e) { d = null; }
     if (!valido(d)) return error('Ese código no sirve. Cópielo completo y vuelva a pegarlo.');
-    d.nube = null; state = normalizar(d); save(); cerrarSheet(); ui.tab = 'inicio'; render(); window.scrollTo(0, 0); toast('Datos recuperados');
+    const anterior = d.nube && d.nube.acepta && d.nube.id ? d.nube.id : (d.reemplaza || null);      /* la copia vieja en la farmacia queda marcada para que no salga duplicada */
+    d.nube = null; d.reemplaza = anterior; d.instalada = enApp(); state = normalizar(d); save(); cerrarSheet(); ui.tab = 'inicio'; render(); window.scrollTo(0, 0); toast('Datos recuperados');
   }
   function copiarDe(id, okMsg) {
     const ta = $(id); if (!ta) return;
@@ -1153,6 +1211,10 @@ textarea.inp{min-height:7rem;resize:vertical;line-height:1.35;font-size:.85rem;w
       case 'copiar-codigo': copiarDe('r-cod', 'Código copiado'); break;
       case 'restaurar-abrir': abrirSheet({ tipo: 'restaurar' }); break;
       case 'recuperar-abrir': abrirSheet({ tipo: nubeConfigurada ? 'recuperar' : 'restaurar' }); break;
+      case 'instalar-ver': abrirSheet({ tipo: 'instalar' }); break;
+      case 'instalar-ya': instalarYa(); break;
+      case 'instalar-ocultar': state.instalada = true; save(); render(); break;
+      case 'instalar-copiar': copiarDe('i-cod', 'Código copiado'); break;
       case 'vinculo-abrir': abrirSheet({ tipo: 'vinculo', codigo: null, error: '' }); pedirVinculo(); break;
       case 'copia-abrir': abrirSheet({ tipo: 'consentir' }); break;
       case 'copia-elegir': elegirCopia(el.getAttribute('data-v') === 'si'); break;

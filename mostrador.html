@@ -256,8 +256,9 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
   const RGB_TIT = { gil: [22, 61, 125], caribe: [11, 95, 145] };      /* títulos, un tono más oscuro para que se lean */
   const RGB_TXT = { gil: [255, 255, 255], caribe: [4, 36, 58] };      /* texto sobre la franja */
   const MEDS = {
-    mounjaro: { nombre: 'Mounjaro (tirzepatida)', corto: 'Mounjaro', inicio: 2.5, gracia: 4, dosis: [2.5, 5, 7.5, 10, 12.5, 15] },
+    mounjaro: { nombre: 'Mounjaro (tirzepatida)', corto: 'Mounjaro', inicio: 2.5, gracia: 4, dosis: [2.5, 5, 7.5, 10, 12.5, 15], pluma: true },
     ozempic: { nombre: 'Ozempic (semaglutida)', corto: 'Ozempic', inicio: 0.25, gracia: 5, dosis: [0.25, 0.5, 1, 2] },
+    wegovy: { nombre: 'Wegovy (semaglutida)', corto: 'Wegovy', inicio: 0.25, gracia: 5, dosis: [0.25, 0.5, 1, 1.7, 2.4], pluma: true },
     otro: { nombre: 'Otro medicamento', corto: 'Otro', inicio: null, gracia: null, dosis: [] }
   };
   const SITIOS = ['Abdomen', 'Muslo', 'Brazo'];
@@ -476,8 +477,12 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
     try {
       const qs = await fb.db.collection('clientes').where('farmacia', '==', state.ajustes.farmacia).get(), arr = [];
       qs.forEach(doc => arr.push(Object.assign({}, doc.data(), { id: doc.id })));
-      arr.sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
-      nubeF.clientes = arr; nubeF.error = '';
+      /* Si un cliente reinstaló la app y recuperó sus datos, la copia vieja queda reemplazada: se oculta y se borra */
+      const viejas = arr.filter(d => d.reemplaza).map(d => d.reemplaza);
+      viejas.forEach(id => { if (arr.some(d => d.id === id)) fb.db.collection('clientes').doc(id).delete().catch(() => {}); });
+      const vivos = arr.filter(d => viejas.indexOf(d.id) < 0);
+      vivos.sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
+      nubeF.clientes = vivos; nubeF.error = '';
     } catch (e) { nubeF.error = 'No se pudieron cargar los clientes con la app. Revise el internet.'; }
   }
   const clienteNube = id => nubeF.clientes.find(c => c.id === id) || null;
@@ -497,7 +502,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       ((d.sintomas || {})[f] || []).forEach(x => { if (x !== 'Me siento bien') r7.sint[x] = (r7.sint[x] || 0) + 1; });
     }
     let restantes = null;
-    if (d.tratamiento && d.tratamiento.med === 'mounjaro') apl.forEach(r => { if (r.plumaNueva || restantes === null || restantes <= 0) restantes = r.dosisPorPluma || 4; restantes -= 1; });
+    if (d.tratamiento && MEDS[d.tratamiento.med] && MEDS[d.tratamiento.med].pluma) apl.forEach(r => { if (r.plumaNueva || restantes === null || restantes <= 0) restantes = r.dosisPorPluma || 4; restantes -= 1; });
     const estado = dias === null ? 'proximo' : dias < 0 ? 'atrasado' : dias === 0 ? 'hoy' : 'proximo';
     const cuando = dias === null ? 'todavía sin controles' : dias < 0 ? 'atrasada ' + (-dias) + (dias === -1 ? ' día' : ' días') : dias === 0 ? 'le toca hoy' : dias === 1 ? 'le toca mañana' : 'le toca en ' + dias + ' días';
     return { rs, pes, vis, ini, act, ult, prox, dias, estado, cuando, r7, restantes, cambio: ini != null && act != null ? act - ini : 0, enMes: vis.length === 0 ? 0 : ((vis.length - 1) % 4) + 1 };
@@ -726,6 +731,9 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       '<p class="guia-intro">' + esc(GUIA.intro) + '</p>' +
       '<div class="acciones" id="pdf-wrap"' + (puedeDescargar() ? '' : ' hidden') + '><button class="btn btn-s" data-act="pdf">Descargar hoja en PDF</button></div>' +
       bloqueQR() +
+      '<h2>Cómo dejarla instalada en el celular del cliente</h2>' +
+      '<h3>En iPhone (Safari)</h3><ul class="puntos"><li>Instálela antes de registrarlo: la app instalada guarda sus datos aparte de Safari.</li><li>Toque Compartir, el cuadrito con la flecha hacia arriba. Si no aparece, toque los tres puntos y luego Compartir.</li><li>Baje y toque "Agregar a inicio", y después "Agregar".</li><li>Abra la app desde el ícono azul del mortero y ahí registre al cliente.</li></ul>' +
+      '<h3>En Android (Chrome)</h3><ul class="puntos"><li>Si sale el botón "Instalar la app en mi celular", tóquelo y acepte.</li><li>Si no sale: tres puntos arriba a la derecha, "Agregar a pantalla principal" o "Instalar app".</li><li>En Samsung Internet: las tres rayas de abajo, "Agregar página a", "Pantalla de inicio".</li></ul>' +
       '<h2>Cómo comer</h2><ul class="puntos">' + li(GUIA.comer) + '</ul>' +
       '<h2>Ejercicio en casa</h2><p>' + esc(GUIA.caminar) + '</p><p style="margin-top:.6rem">' + esc(GUIA.fuerza) + '</p>' +
       '<ol class="rutina">' + GUIA.rutina.map(r => '<li><span>' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span></li>').join('') + '</ol>' +
@@ -770,7 +778,7 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       '<input type="file" id="archivo" accept=".json,application/json" hidden>' +
       (state.clientes.some(c => c.demo) ? '<button class="btn btn-s" data-act="borrar-ejemplos">Borrar clientes de ejemplo</button>' : '<button class="btn btn-s" data-act="cargar-ejemplos">Cargar clientes de ejemplo</button>') +
       '<button class="btn btn-d" data-act="borrar-todo">Borrar todos los datos</button></div></div>' +
-      '<p class="muted" style="margin-top:1.4rem">Versión 4, del 19 de setiembre de 2026</p></section>';
+      '<p class="muted" style="margin-top:1.4rem">Versión 6, del 21 de setiembre de 2026</p></section>';
   }
 
   function render() {
@@ -1099,8 +1107,8 @@ textarea.inp{min-height:6.5rem;resize:vertical;line-height:1.4}
       }
     }
     doc.setTextColor(20, 32, 46); doc.setFontSize(14);
-    const pasos = ['1. Abra la cámara de su celular y apunte al código.', '2. Toque el enlace que aparece.', '3. Elija Farmacia ' + BRANDS[b] + ' y escriba su nombre.'];
-    pasos.forEach((t, k) => doc.text(t, M, 664 + k * 22));
+    const pasos = ['1. Abra la cámara de su celular y apunte al código.', '2. Toque el enlace que aparece.', '3. Pida en el mostrador que se la dejen instalada en su pantalla.', '4. Elija Farmacia ' + BRANDS[b] + ' y escriba su nombre.'];
+    pasos.forEach((t, k) => doc.text(t, M, 652 + k * 21));
     doc.setFontSize(9.5); doc.setTextColor(80, 94, 110);
     doc.text('Programa de acompañamiento para personas con tratamiento indicado por su médico.', M, 748);
     doc.text(doc.splitTextToSize(url, W - 2 * M)[0], M, 762);
